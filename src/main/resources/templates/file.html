@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Windows 11 文件浏览器</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+    <style>
+        :root {
+            --win-bg: #f3f3f3;
+            --win-border: #e0e0e0;
+            --win-accent: #0078d4;
+            --win-hover: rgba(0, 120, 212, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui;
+            background: var(--win-bg);
+        }
+
+        .file-explorer {
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            height: 80vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.9);
+            border-right: 1px solid var(--win-border);
+            padding: 16px;
+        }
+
+        .quick-access h6 {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .nav-link {
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--win-hover);
+        }
+
+        .toolbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--win-border);
+            padding: 8px 16px;
+            gap: 12px;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 4px;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+
+        .file-list {
+            background: rgba(255, 255, 255, 0.9);
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: 40px 3fr 1fr 120px 120px;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            cursor: default;
+        }
+
+        .file-item:hover {
+            background: var(--win-hover);
+        }
+
+        .search-box {
+            width: 300px;
+            border-radius: 20px;
+            border: 1px solid var(--win-border);
+            padding: 4px 16px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid var(--win-border);
+            padding: 8px 16px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+<body>
+    <div class="container-lg mt-4">
+    <div class="file-explorer">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="quick-access">
+                <h6>快速访问</h6>
+                <div class="nav flex-column">
+                    <a class="nav-link" href="#" data-path="C:\\">
+                        <i class="fas fa-desktop me-2"></i>C Drive
+                    </a>
+                    <a class="nav-link" href="#" data-path="D:\\">
+                        <i class="fas fa-desktop me-2"></i>D Drive
+                    </a>
+                    <a class="nav-link" href="#" data-path="E:\\">
+                        <i class="fas fa-desktop me-2"></i>E Drive
+                    </a>
+                    <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Repository">
+                        <i class="fas fa-download me-2"></i>Qlik Sense Repository Log
+                    </a>
+                    <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Script">
+                        <i class="fas fa-download me-2"></i>Qlik Sense Script Log
+                    </a>
+                    <a class="nav-link" href="#" data-path="D:\\QlikShare\\ArchivedLogs">
+                        <i class="fas fa-download me-2"></i>Qlik Sense ArchivedLogs
+                    </a>
+                    <a class="nav-link" href="#" data-path="D:\\DataShare">
+                        <i class="fas fa-hard-drive me-2"></i>DataShare
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="flex-grow-1 d-flex flex-column">
+            <!-- 工具栏 -->
+            <div class="toolbar d-flex align-items-center">
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-light" id="btnBack">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light" id="btnForward">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                <button class="btn btn-sm btn-light" id="btnUp">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>
+                <input type="text" class="search-box" placeholder="搜索">
+            </div>
+
+            <!-- 文件列表 -->
+            <div class="file-list" id="fileList">
+                <div class="file-item text-muted fw-bold">
+                    <div></div>
+                    <div>名称</div>
+                    <div>类型</div>
+                    <div>修改日期</div>
+                    <div>大小</div>
+                </div>
+            </div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <span>0 个项目</span>
+                <span>可用空间: 235 GB</span>
+            </div>
+        </div>
+    </div>
+    </div>
+    </body>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 模拟文件系统数据
+        const fileSystem = {
+            'C:\\': [
+                { name: 'Windows', type: '文件夹', size: '-', modified: '2024-02-15', icon: 'folder' },
+                { name: 'Program Files', type: '文件夹', size: '-', modified: '2024-02-14', icon: 'folder' },
+                { name: 'Users', type: '文件夹', size: '-', modified: '2024-02-13', icon: 'folder' },
+                { name: 'document.txt', type: '文本文档', size: '15 KB', modified: '2024-02-15', icon: 'file' }
+            ],
+            'C:\\Users\\Public\\Desktop': [
+                { name: 'Chrome.lnk', type: '快捷方式', size: '2 KB', modified: '2024-02-15', icon: 'link' },
+                { name: '文档', type: '文件夹', size: '-', modified: '2024-02-14', icon: 'folder' }
+            ],
+            'C:\\Users\\Public\\Documents': [
+                { name: '报告.docx', type: 'Word 文档', size: '1.5 MB', modified: '2024-02-15', icon: 'file-word' }
+            ],
+            'C:\\Users\\Public\\Downloads': [
+                { name: '安装包.exe', type: '应用程序', size: '45 MB', modified: '2024-02-14', icon: 'file-exe' }
+            ]
+        };
+
+        // 图标映射
+        const iconMap = {
+            folder: 'fa-folder',
+            'file-word': 'fa-file-word',
+            'file-exe': 'fa-file-code',
+            link: 'fa-link',
+            default: 'fa-file'
+        };
+
+        let currentPath = 'C:\\';
+        let history = [];
+        let currentHistoryIndex = -1;
+
+        // 初始化
+        $(document).ready(() => {
+            loadPath(currentPath);
+
+            // 快速访问点击
+            $('.nav-link[data-path]').click(function(e) {
+                e.preventDefault();
+                loadPath($(this).data('path'));
+            });
+
+            // 返回上级目录
+            $('#btnUp').click(() => {
+                const parentPath = getParentPath(currentPath);
+                if (parentPath) loadPath(parentPath);
+            });
+
+            // 导航按钮
+            $('#btnBack').click(() => navigateHistory(-1));
+            $('#btnForward').click(() => navigateHistory(1));
+
+            // 搜索功能
+            $('.search-box').on('input', function() {
+                const keyword = $(this).val().toLowerCase();
+                filterFiles(keyword);
+            });
+        });
+
+        // 加载路径
+        function loadPath(path, fromHistory = false) {
+            if (!fromHistory) {
+                history = history.slice(0, currentHistoryIndex + 1);
+                history.push(path);
+                currentHistoryIndex++;
+            }
+
+            currentPath = path;
+            updateBreadcrumb();
+            renderFiles(fileSystem[path] || []);
+            updateNavigationButtons();
+        }
+
+        // 渲染文件列表
+        function renderFiles(files) {
+            const $list = $('#fileList').empty().append(
+                '<div class="file-item text-muted fw-bold">' +
+                '<div></div><div>名称</div><div>类型</div><div>修改日期</div><div>大小</div></div>'
+            );
+
+            files.forEach(file => {
+                const icon = iconMap[file.icon] || iconMap.default;
+                $list.append(`
+                    <div class="file-item">
+                        <div><i class="fas ${icon} text-primary"></i></div>
+                        <div>${file.name}</div>
+                        <div>${file.type}</div>
+                        <div>${file.modified}</div>
+                        <div>${file.size}</div>
+                    </div>
+                `);
+            });
+
+            // 更新状态栏
+            $('.status-bar span:first').text(`${files.length} 个项目`);
+        }
+
+        // 搜索过滤
+        function filterFiles(keyword) {
+            const files = fileSystem[currentPath] || [];
+            const filtered = files.filter(file =>
+                file.name.toLowerCase().includes(keyword)
+            );
+            renderFiles(filtered);
+        }
+
+        // 导航历史控制
+        function navigateHistory(direction) {
+            const newIndex = currentHistoryIndex + direction;
+            if (newIndex >= 0 && newIndex < history.length) {
+                currentHistoryIndex = newIndex;
+                loadPath(history[currentHistoryIndex], true);
+            }
+        }
+
+        // 获取上级路径
+        function getParentPath(path) {
+            const parts = path.split('\\').filter(p => p);
+            if (parts.length <= 1) return null;
+            return parts.slice(0, -1).join('\\') + '\\';
+        }
+
+        // 更新面包屑导航
+        function updateBreadcrumb() {
+            const parts = currentPath.split('\\').filter(p => p);
+            const $breadcrumb = $('.breadcrumb').empty();
+
+            parts.forEach((part, index) => {
+                const isLast = index === parts.length - 1;
+                const path = parts.slice(0, index + 1).join('\\') + '\\';
+                $breadcrumb.append(
+                    $(`<a class="breadcrumb-item ${isLast ? 'active' : ''}">${part}</a>`)
+                        .click(!isLast ? () => loadPath(path) : null)
+                );
+            });
+        }
+
+        // 更新导航按钮状态
+        function updateNavigationButtons() {
+            $('#btnBack').prop('disabled', currentHistoryIndex <= 0);
+            $('#btnForward').prop('disabled', currentHistoryIndex >= history.length - 1);
+            $('#btnUp').prop('disabled', !getParentPath(currentPath));
+        }
+    </script>
+
+</html>
