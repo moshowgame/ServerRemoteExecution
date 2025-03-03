@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Windows 11 文件浏览器</title>
-    <link th:css th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
-    <link th:href th:href="@{/static/fontawesome/6.4.2/css/all.min.css}" rel="stylesheet"/>
-</head>
+    <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet"/>
     <style>
         :root {
             --win-bg: #f3f3f3;
@@ -104,105 +103,102 @@
             display: flex;
             justify-content: space-between;
         }
+
+        .file-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            border-top: 1px solid var(--win-border);
+            flex-grow: 1;
+            overflow-y: auto;
+        }
     </style>
+</head>
 <body>
     <div class="container-lg mt-4">
-    <div class="file-explorer">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
-            <div class="quick-access">
-                <h6>快速访问</h6>
-                <div class="nav flex-column">
-                    <a class="nav-link" href="#" data-path="C:\\">
-                        <i class="fas fa-desktop me-2"></i>C Drive
-                    </a>
-                    <a class="nav-link" href="#" data-path="D:\\">
-                        <i class="fas fa-desktop me-2"></i>D Drive
-                    </a>
-                    <a class="nav-link" href="#" data-path="E:\\">
-                        <i class="fas fa-desktop me-2"></i>E Drive
-                    </a>
-                    <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Repository">
-                        <i class="fas fa-download me-2"></i>Qlik Sense Repository Log
-                    </a>
-                    <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Script">
-                        <i class="fas fa-download me-2"></i>Qlik Sense Script Log
-                    </a>
-                    <a class="nav-link" href="#" data-path="D:\\QlikShare\\ArchivedLogs">
-                        <i class="fas fa-download me-2"></i>Qlik Sense ArchivedLogs
-                    </a>
-                    <a class="nav-link" href="#" data-path="D:\\DataShare">
-                        <i class="fas fa-hard-drive me-2"></i>DataShare
-                    </a>
+        <div class="file-explorer">
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <div class="quick-access">
+                    <h6>快速访问</h6>
+                    <div class="nav flex-column">
+                        <a class="nav-link" href="#" data-path="C:\\">
+                            <i class="fas fa-desktop me-2"></i>C Drive
+                        </a>
+                        <a class="nav-link" href="#" data-path="D:\\">
+                            <i class="fas fa-desktop me-2"></i>D Drive
+                        </a>
+                        <a class="nav-link" href="#" data-path="E:\\">
+                            <i class="fas fa-desktop me-2"></i>E Drive
+                        </a>
+                        <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Repository">
+                            <i class="fas fa-download me-2"></i>Qlik Sense Repository Log
+                        </a>
+                        <a class="nav-link" href="#" data-path="C:\\ProgramData\\Qlik\\Sense\\Log\\Script">
+                            <i class="fas fa-download me-2"></i>Qlik Sense Script Log
+                        </a>
+                        <a class="nav-link" href="#" data-path="D:\\QlikShare\\ArchivedLogs">
+                            <i class="fas fa-download me-2"></i>Qlik Sense ArchivedLogs
+                        </a>
+                        <a class="nav-link" href="#" data-path="D:\\DataShare">
+                            <i class="fas fa-hard-drive me-2"></i>DataShare
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="flex-grow-1 d-flex flex-column">
+                <!-- 工具栏 -->
+                <div class="toolbar d-flex align-items-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-light" id="btnBack">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light" id="btnForward">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-light" id="btnUp">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>
+                    <input type="text" class="search-box" placeholder="搜索">
+                </div>
+
+                <!-- 文件列表 -->
+                <div class="file-list" id="fileList">
+                    <div class="file-item text-muted fw-bold">
+                        <div></div>
+                        <div>名称</div>
+                        <div>类型</div>
+                        <div>修改日期</div>
+                        <div>大小</div>
+                    </div>
+                </div>
+
+                <!-- 文件内容 -->
+                <div class="file-content" id="fileContent"></div>
+
+                <!-- 状态栏 -->
+                <div class="status-bar">
+                    <span>0 个项目</span>
+                    <span>可用空间: 235 GB</span>
                 </div>
             </div>
         </div>
-
-        <!-- 主内容区 -->
-        <div class="flex-grow-1 d-flex flex-column">
-            <!-- 工具栏 -->
-            <div class="toolbar d-flex align-items-center">
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-light" id="btnBack">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button class="btn btn-sm btn-light" id="btnForward">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-                <button class="btn btn-sm btn-light" id="btnUp">
-                    <i class="fas fa-arrow-up"></i>
-                </button>
-                <nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>
-                <input type="text" class="search-box" placeholder="搜索">
-            </div>
-
-            <!-- 文件列表 -->
-            <div class="file-list" id="fileList">
-                <div class="file-item text-muted fw-bold">
-                    <div></div>
-                    <div>名称</div>
-                    <div>类型</div>
-                    <div>修改日期</div>
-                    <div>大小</div>
-                </div>
-            </div>
-
-            <!-- 状态栏 -->
-            <div class="status-bar">
-                <span>0 个项目</span>
-                <span>可用空间: 235 GB</span>
-            </div>
-        </div>
     </div>
-    </div>
-    </body>
+
     <script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
     <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 
-    <script>
-        // 模拟文件系统数据
-        const fileSystem = {
-            'C:\\': [
-                { name: 'Windows', type: '文件夹', size: '-', modified: '2024-02-15', icon: 'folder' },
-                { name: 'Program Files', type: '文件夹', size: '-', modified: '2024-02-14', icon: 'folder' },
-                { name: 'Users', type: '文件夹', size: '-', modified: '2024-02-13', icon: 'folder' },
-                { name: 'document.txt', type: '文本文档', size: '15 KB', modified: '2024-02-15', icon: 'file' }
-            ],
-            'C:\\Users\\Public\\Desktop': [
-                { name: 'Chrome.lnk', type: '快捷方式', size: '2 KB', modified: '2024-02-15', icon: 'link' },
-                { name: '文档', type: '文件夹', size: '-', modified: '2024-02-14', icon: 'folder' }
-            ],
-            'C:\\Users\\Public\\Documents': [
-                { name: '报告.docx', type: 'Word 文档', size: '1.5 MB', modified: '2024-02-15', icon: 'file-word' }
-            ],
-            'C:\\Users\\Public\\Downloads': [
-                { name: '安装包.exe', type: '应用程序', size: '45 MB', modified: '2024-02-14', icon: 'file-exe' }
-            ]
-        };
-
+    <script th:inline="javascript">
+        const listUrl = /*[[ @{/list} ]]*/ '';
+        const readUrl = /*[[ @{/read} ]]*/ '';
+        const downloadUrl = /*[[ @{/download} ]]*/ '';
         // 图标映射
         const iconMap = {
+            true: 'fa-folder',
             folder: 'fa-folder',
             'file-word': 'fa-file-word',
             'file-exe': 'fa-file-code',
@@ -239,6 +235,17 @@
                 const keyword = $(this).val().toLowerCase();
                 filterFiles(keyword);
             });
+
+            // 文件点击事件
+            $('#fileList').on('click', '.file-item', function() {
+                const fileName = $(this).find('div:nth-child(2)').text();
+                const filePath = currentPath +"//"+ fileName;
+                if ($(this).find('div:nth-child(3)').text() === '文件夹') {
+                    loadPath(filePath);
+                } else {
+                    readFile(filePath);
+                }
+            });
         });
 
         // 加载路径
@@ -251,8 +258,26 @@
 
             currentPath = path;
             updateBreadcrumb();
-            renderFiles(fileSystem[path] || []);
+            fetchFiles(path);
             updateNavigationButtons();
+            $('#fileContent').hide();
+        }
+
+        // 获取文件列表
+        function fetchFiles(path) {
+            $.ajax({
+                url: listUrl,
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ filePath: path }),
+                success: function(response) {
+                    // console.log(response);
+                    renderFiles(response);
+                },
+                error: function(xhr, status, error) {
+                    $('#fileList').empty().append('<div class="file-item text-danger">加载文件失败</div>');
+                }
+            });
         }
 
         // 渲染文件列表
@@ -263,13 +288,14 @@
             );
 
             files.forEach(file => {
-                const icon = iconMap[file.icon] || iconMap.default;
+                const icon = iconMap[file.type] || iconMap.default;
+                const fileType = file.directory ? '文件夹' : '文件';
                 $list.append(`
                     <div class="file-item">
                         <div><i class="fas ${icon} text-primary"></i></div>
                         <div>${file.name}</div>
-                        <div>${file.type}</div>
-                        <div>${file.modified}</div>
+                        <div>${fileType}</div>
+                        <div>${file.lastModified}</div>
                         <div>${file.size}</div>
                     </div>
                 `);
@@ -325,6 +351,22 @@
             $('#btnForward').prop('disabled', currentHistoryIndex >= history.length - 1);
             $('#btnUp').prop('disabled', !getParentPath(currentPath));
         }
-    </script>
 
+        // 读取文件内容
+        function readFile(filePath) {
+            $.ajax({
+                url: readUrl,
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ filePath: filePath }),
+                success: function(response) {
+                    $('#fileContent').html('<pre>' + response + '</pre>').show();
+                },
+                error: function(xhr, status, error) {
+                    $('#fileContent').html('<pre>读取文件失败</pre>').show();
+                }
+            });
+        }
+    </script>
+</body>
 </html>
