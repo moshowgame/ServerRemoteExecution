@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerShell Landing Page</title>
+    <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .landing-container {
+            background-color: #000;
+            padding: 30px;
+            border: 1px solid #0078d4;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 120, 212, 0.5);
+            width: 400px;
+            text-align: center;
+        }
+        .landing-container h2 {
+            margin-bottom: 20px;
+            color: #0078d4;
+        }
+        .landing-container .form-group {
+            margin-bottom: 15px;
+        }
+        .landing-container .form-control {
+            background-color: #9cb9a1;
+            color: #fff;
+            border: 1px solid #0078d4;
+        }
+        .landing-container .form-control:focus {
+            border-color: #005a9e;
+            box-shadow: 0 0 8px rgba(0, 90, 158, 0.5);
+        }
+        .landing-container .btn-powershell {
+            width: 100%;
+            background-color: #0078d4;
+            border-color: #0078d4;
+        }
+        .landing-container .btn-powershell:hover {
+            background-color: #005a9e;
+            border-color: #005a9e;
+        }
+        .landing-container .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <h2>SRE Landing Page</h2>
+        <form id="optionForm">
+            <div class="form-group">
+                <p>Enter 1 goto Powershell Executor ;<br> Enter 2 goto File Explorer</p>
+                <input type="text" class="form-control" id="option" placeholder="请输入选项 (1 或 2)" required>
+            </div>
+            <button type="submit" class="btn btn-powershell">提交</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+    </div>
+
+    <script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
+    <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            const shellUrl = /*[[ @{/shell} ]]*/ '';
+            const fileUrl = /*[[ @{/file} ]]*/ '';
+            $('#optionForm').on('submit', function(event) {
+                event.preventDefault();
+
+                const option = $('#option').val().trim();
+
+                if (option !== '1' && option !== '2') {
+                    $('#errorMessage').text('请输入有效的选项 (1 或 2)');
+                    return;
+                }
+
+                $('#errorMessage').text('');
+
+                if (option === '1') {
+                    window.location.href = shellUrl;
+                } else if (option === '2') {
+                    window.location.href = fileUrl;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

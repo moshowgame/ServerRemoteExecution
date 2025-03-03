@@ -1,29 +1,50 @@
 package com.softdev.system.config;
 
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class UserLoginInterceptor implements HandlerInterceptor {
 
-/*    @Override
+    @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-                             Object handler)throws Exception {
-        HttpSession session = request.getSession(true);
-        Object user=session.getAttribute("loginUser");
-        Object openid=session.getAttribute("openid");
-        if(session.getAttribute("systemName")==null){
-            session.setAttribute("systemName","SpringBootCMS");
-        }
-        if(null!=user||openid!=null) {
-            //已登录
-            return true;
-        }else {//未登录
-            //直接重定向到登录页面
-            response.sendRedirect(request.getContextPath()+"/login");
+                             Object handler) throws Exception {
+        // 白名单路径直接放行
+        String uri = request.getRequestURI();
+        //No static resource bootstrap/5.3.2/js/bootstrap.js.map.
+        if(uri.contains(".map")){
             return false;
         }
-    }*/
 
+        if(uri.startsWith("/login") || uri.startsWith("/entitlement")){
+            return true;
+        }
+
+        // 检查Session中的登录状态
+        HttpSession session = request.getSession(false); // 不创建新session
+        if(session != null && session.getAttribute("entitledUser") != null){
+            return true;
+        }
+
+//        // 检查Cookie中的userName
+//        Cookie[] cookies = request.getCookies();
+//        if(cookies != null){
+//            for(Cookie cookie : cookies){
+//                if("userName".equals(cookie.getName()) &&
+//                   !StringUtils.isEmpty(cookie.getValue())){
+//                    return true; // 已登录
+//                }
+//            }
+//        }
+
+        // 未登录跳转到登录页
+        response.sendRedirect(request.getContextPath()+"/login");
+        return false;
+    }
 }

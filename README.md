@@ -32,15 +32,18 @@ TEST SHELL
 
 版本更新
 ----
-| 版本         | 更新内容                                       |
-|------------|--------------------------------------------|
-| 2025-03-02 | initial version                            |
+| 版本         | 更新内容                          |
+|------------|-------------------------------|
+| 2025-03-03 | 新增登录页面和Landing Page，静态文件本地化 |
+| 2025-03-02 | initial version               |
 
 预览
 ----
+![Login](img0.png)
+![Landing](img4.png)
 ![SHELL](img1.png)
 ![FILE](img2.png) 
-![img.png](img3.png)
+![API](img3.png)
 
 
 List folder

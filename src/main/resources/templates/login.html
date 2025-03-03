@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <link th:href="@{static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #0078d4;
+        }
+        .login-container .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .login-container .btn-login {
+            width: 100%;
+            background-color: #0078d4;
+            border-color: #0078d4;
+        }
+        .login-container .btn-login:hover {
+            background-color: #005a9e;
+            border-color: #005a9e;
+        }
+        .login-container .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .login-container .input-group-text {
+            background-color: #f0f0f0;
+            border: none;
+        }
+        .login-container .form-control:focus {
+            border-color: #0078d4;
+            box-shadow: 0 0 8px rgba(0, 120, 212, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="userName">用户名</label>
+                <div class="input-group">
+                    <div class="input-group-text"><i class="bi bi-person-fill"></i></div>
+                    <input type="text" class="form-control" id="userName" placeholder="请输入用户名" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="passWord">密码</label>
+                <div class="input-group">
+                    <div class="input-group-text"><i class="bi bi-lock-fill"></i></div>
+                    <input type="password" class="form-control" id="passWord" placeholder="请输入密码" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="ticketNumber">Ticket Number/Reason</label>
+                <div class="input-group">
+                    <div class="input-group-text"><i class="bi bi-ticket-perforated-fill"></i></div>
+                    <input type="text" class="form-control" id="ticketNumber" placeholder="请输入Ticket Number/Reason" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-login">登录</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+    </div>
+
+    <script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
+    <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/static/bootstrap/5.3.2/css/bootstrap-icons.min.css}">
+    <script th:inline="javascript">
+        $(document).ready(function() {
+            let isSubmitting = false;
+            let retryTimer = null;
+
+            const entitlementUrl = /*[[ @{/entitlement} ]]*/ '';
+            const landingUrl = /*[[ @{/landing} ]]*/ '';
+
+            $('#loginForm').on('submit', function(event) {
+                event.preventDefault();
+
+                if (isSubmitting) return;
+
+                const userName = $('#userName').val().trim();
+                const passWord = $('#passWord').val().trim();
+                const ticketNumber = $('#ticketNumber').val().trim();
+
+                if (!userName || !passWord || !ticketNumber) {
+                    $('#errorMessage').text('所有字段都不能为空');
+                    return;
+                }
+
+                isSubmitting = true;
+                $('#errorMessage').text('');
+
+                const data = {
+                    userName: userName,
+                    passWord: passWord,
+                    ticketNumber: ticketNumber
+                };
+
+                $.ajax({
+                    url: entitlementUrl,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        isSubmitting = false;
+                        alert('登录成功');
+                        // 可以在这里重定向到其他页面
+                        window.location.href = landingUrl;
+                    },
+                    error: function(xhr, status, error) {
+                        isSubmitting = false;
+                        $('#errorMessage').text('登录失败，请稍后再试');
+                        retryTimer = setTimeout(() => {
+                            $('#errorMessage').text('');
+                        }, 5000);
+                    }
+                });
+            });
+
+            // 防抖功能
+            $('#loginForm input').on('input', function() {
+                clearTimeout(retryTimer);
+                $('#errorMessage').text('');
+            });
+        });
+    </script>
+</body>
+</html>

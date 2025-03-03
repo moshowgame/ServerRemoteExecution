@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Web PowerShell Executor</title>
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/static/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet">
 
     <style>
         #ps-terminal {
             background-color: #012456;
-            color: #00ff00;
+            color: #34e134;
             font-family: 'Consolas', monospace;
             height: 60vh;
             overflow-y: auto;
@@ -23,26 +23,26 @@
 
         .cmd-input {
             background-color: #012456;
-            color: #00ff00;
+            color: #34e134;
             border: none;
             border-radius: 0;
-            caret-color: #00ff00;
+            caret-color: #34e134;
         }
 
         .cmd-input:focus {
             background-color: #012456;
-            color: #00ff00;
+            color: #34e134;
             box-shadow: none;
         }
 
         .ps-prompt {
-            color: #00ff00;
+            color: #34e134;
             white-space: nowrap;
         }
 
         .loading-spinner {
             display: none;
-            color: #00ff00;
+            color: #34e134;
         }
     </style>
 </head>
@@ -56,14 +56,16 @@
             <div id="ps-terminal" class="p-3">
                 <!-- 初始引导信息 -->
                 <div class="output-line">
-                    ****** Windows Remove PowerShell ******<br>
+                    ****** Server Remote Execution - execute your powershell script remotely ******<br>
                     (c) Powered by Moshow ( <a href="https://zhengkai.blog.csdn.net/">CSDN</a> | <a href="https://github.com/moshowgame/">GITHUB</a> ).<br><br>
+
+                    安装最新的 PowerShell，了解新功能和改进！https://aka.ms/PSWindows
                 </div>
             </div>
 
             <!-- 输入区域 -->
             <div class="input-group p-2 border-top border-primary">
-                <span class="input-group-text ps-prompt bg-transparent border-0">PS C:\></span>
+                <span class="input-group-text ps-prompt bg-transparent border-0">PS </span>
                 <input type="text" id="cmd-input"
                        class="form-control cmd-input border-0"
                        autocomplete="off"
@@ -77,8 +79,8 @@
 </div>
 
 <!-- jQuery & Bootstrap JS -->
-<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
+<script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 
 <script>
     $(document).ready(function() {
