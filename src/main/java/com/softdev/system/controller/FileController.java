@@ -89,6 +89,10 @@ public class FileController {
                 //special file type
                 log.info("File is a near text file: {} {}", path , null);
             }
+            else if (contentType == null){
+                log.error("File is a near text file: {} {}", path , null);
+                return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+null);
+            }
             else if (contentType != null && !contentType.startsWith("text")) {
                 log.error("File is not a text file: {} {}", path , contentType);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);

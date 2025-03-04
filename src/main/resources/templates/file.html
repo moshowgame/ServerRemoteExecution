@@ -243,12 +243,12 @@
             $('#fileList').on('click', '.file-item', function() {
                 const fileName = $(this).find('div:nth-child(2)').text();
                 const filePath = currentPath +"//"+ fileName;
-                if ($(this).find('div:nth-child(3)').text() === '文件夹') {
+                if ($(this).find('div:nth-child(1)').html() === '<i class="fas fa-folder text-primary"></i>') {
                     loadPath(filePath);
                 } else {
                     readFile(filePath);
                 }
-                console.log(filePath);
+                console.log($(this).find('div:nth-child(1)').html(),filePath);
             });
 
             // 进入文件夹
