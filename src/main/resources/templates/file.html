@@ -245,6 +245,7 @@
                 } else {
                     readFile(filePath);
                 }
+                console.log(filePath);
             });
         });
 
@@ -275,7 +276,7 @@
                     renderFiles(response);
                 },
                 error: function(xhr, status, error) {
-                    $('#fileList').empty().append('<div class="file-item text-danger">加载文件失败</div>');
+                    $('#fileList').empty().append('<div class="text-danger">加载文件失败: Access Denied Exception or other IO Exception</div>');
                 }
             });
         }
@@ -362,8 +363,9 @@
                 success: function(response) {
                     $('#fileContent').html('<pre>' + response + '</pre>').show();
                 },
-                error: function(xhr, status, error) {
-                    $('#fileContent').html('<pre>读取文件失败</pre>').show();
+                error: function(error) {
+                    console.log(error);
+                    $('#fileContent').html('<pre>'+error.responseJSON.msg+'</pre>').show();
                 }
             });
         }

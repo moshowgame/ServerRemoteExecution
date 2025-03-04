@@ -5,6 +5,7 @@ import com.softdev.system.util.DateUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,8 @@ public class FileSystemService {
                 info.setLastModified(DateUtil.formatTimestamp(p.toFile().lastModified()));
                 return info;
             }).toList().stream().sorted(Comparator.comparing(FileInfo::getLastModified, Comparator.reverseOrder())).toList();
+        } catch (AccessDeniedException e) {
+            throw new AccessDeniedException("Access Denied: "+dirPath);
         }
     }
 

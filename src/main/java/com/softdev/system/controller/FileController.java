@@ -4,6 +4,7 @@ import com.softdev.system.entity.FileInfo;
 import com.softdev.system.entity.FileRequest;
 import com.softdev.system.service.FileSystemService;
 import com.softdev.system.service.PowerShellService;
+import com.softdev.system.util.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -67,7 +68,7 @@ public class FileController {
     }
 
     @PostMapping("/read")
-    public ResponseEntity<String> read(@RequestBody FileRequest fileRequest) throws IOException {
+    public Object read(@RequestBody FileRequest fileRequest) throws IOException {
         fileRequest.setExecutionType("read");
         fileRequest.setExecutionTime(new Date());
 
@@ -79,7 +80,19 @@ public class FileController {
 //        }
         // 文件大小校验
         if (Files.size(path) > 10 * 1024 * 1024) {
-            throw new IllegalArgumentException("File exceeds 10MB limit");
+            log.error("File exceeds 10MB limit :{} ", path );
+            return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File exceeds 10MB limit");
+        }
+        try {
+            String contentType = Files.probeContentType(path);
+            if (contentType != null && contentType.startsWith("text")) {
+                log.error("File is not a text file: {} {}", path , contentType);
+                return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);
+            }
+            log.info("File type: {} {}", path , contentType);
+        } catch (IOException e) {
+            log.error("Error checking file type for path: {}", path, e);
+            return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error checking file type for path");
         }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE,"text/plain")
