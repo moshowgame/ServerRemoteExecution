@@ -85,7 +85,11 @@ public class FileController {
         }
         try {
             String contentType = Files.probeContentType(path);
-            if (contentType != null && contentType.startsWith("text")) {
+            if(contentType == null && (fileRequest.getFilePath().toLowerCase().contains(".txt")||fileRequest.getFilePath().toLowerCase().contains(".log"))){
+                //special file type
+                log.info("File is a near text file: {} {}", path , null);
+            }
+            else if (contentType != null && !contentType.startsWith("text")) {
                 log.error("File is not a text file: {} {}", path , contentType);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);
             }

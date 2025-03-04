@@ -6,6 +6,7 @@
     <title>Windows 11 文件浏览器</title>
     <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
     <link th:href="@{/static/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/static/bootstrap/5.3.2/css/bootstrap-icons.min.css}">
     <style>
         :root {
             --win-bg: #f3f3f3;
@@ -174,6 +175,7 @@
                         <div>类型</div>
                         <div>修改日期</div>
                         <div>大小</div>
+                        <div>操作</div>
                     </div>
                 </div>
 
@@ -182,8 +184,8 @@
 
                 <!-- 状态栏 -->
                 <div class="status-bar">
-                    <span>0 个项目</span>
-                    <span>可用空间: 235 GB</span>
+                    <span>N 个项目</span>
+                    <span>可用空间: X GB</span>
                 </div>
             </div>
         </div>
@@ -199,6 +201,7 @@
         // 图标映射
         const iconMap = {
             true: 'fa-folder',
+            '文件夹': 'fa-folder',
             folder: 'fa-folder',
             'file-word': 'fa-file-word',
             'file-exe': 'fa-file-code',
@@ -247,6 +250,27 @@
                 }
                 console.log(filePath);
             });
+
+            // 进入文件夹
+            $('#fileList').on('click', '.enter-btn', function(e) {
+                e.stopPropagation();
+                const path = $(this).data('path');
+                loadPath(path);
+            });
+
+            // 读取文件
+            $('#fileList').on('click', '.read-btn', function(e) {
+                e.stopPropagation();
+                const path = $(this).data('path');
+                readFile(path);
+            });
+
+            // 下载文件
+            $('#fileList').on('click', '.download-btn', function(e) {
+                e.stopPropagation();
+                const path = $(this).data('path');
+                downloadFile(path);
+            });
         });
 
         // 加载路径
@@ -285,19 +309,23 @@
         function renderFiles(files) {
             const $list = $('#fileList').empty().append(
                 '<div class="file-item text-muted fw-bold">' +
-                '<div></div><div>名称</div><div>类型</div><div>修改日期</div><div>大小</div></div>'
+                '<div>名称</div><div>类型</div><div>修改日期</div><div>大小</div><div>操作</div></div>'
             );
 
             files.forEach(file => {
-                const icon = iconMap[file.type] || iconMap.default;
                 const fileType = file.directory ? '文件夹' : '文件';
+                const icon = iconMap[fileType] || iconMap.default;
+                const actionButton = file.directory
+                    ? `<button class="btn btn-sm btn-primary enter-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-folder2-open"></i></button>`
+                    : `<button class="btn btn-sm btn-success read-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-code-square"></i></button>
+                       <button class="btn btn-sm btn-info download-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-file-earmark-arrow-down"></i></button>`;
                 $list.append(`
                     <div class="file-item">
                         <div><i class="fas ${icon} text-primary"></i></div>
                         <div>${file.name}</div>
-                        <div>${fileType}</div>
                         <div>${file.lastModified}</div>
                         <div>${file.size}</div>
+                        <div>${actionButton}</div>
                     </div>
                 `);
             });
@@ -368,6 +396,34 @@
                     $('#fileContent').html('<pre>'+error.responseJSON.msg+'</pre>').show();
                 }
             });
+        }
+        // 下载文件内容
+        function downloadFile(filePath) {
+            // 创建一个隐藏的<a>标签
+            var a = document.createElement('a');
+            a.style.display = 'none';
+            document.body.appendChild(a);
+
+            // 创建一个隐藏的表单
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = downloadUrl;
+            form.style.display = 'none';
+            document.body.appendChild(form);
+
+            // 创建一个隐藏的输入字段，用于传递filePath
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'filePath';
+            input.value = filePath;
+            form.appendChild(input);
+
+            // 提交表单
+            form.submit();
+
+            // 移除表单和<a>标签
+            document.body.removeChild(form);
+            document.body.removeChild(a);
         }
     </script>
 </body>
