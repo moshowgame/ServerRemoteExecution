@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>日志查看器</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/static/bootstrap/5.3.2/css/bootstrap-icons.min.css}">
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" th:href="@{/static/codemirror/5.65.13/codemirror.min.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/idea.min.css" rel="stylesheet">
+    <style>
+        .CodeMirror { height: calc(100vh - 150px); border-left: 1px solid #ddd; }
+        .timestamp { color: #008800; font-weight: bold; }
+        .log-info { color: #0000FF; }
+        .log-error { color: #FF0000; font-weight: bold; }
+        .log-warn { color: #FFA500; }
+        .log-debug { color: #888888; }
+        .className { color: #660e7a; }
+        .stacktrace { color: #666; }
+        .number { color: #0000cc; }
+        .highlight { background: #ff0; }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">日志查看器</span>
+        <div class="d-flex">
+            <div class="form-check form-switch text-light me-3">
+                <input class="form-check-input" type="checkbox" id="autoScroll">
+                <label class="form-check-label" for="autoScroll">自动滚动</label>
+            </div>
+            <div class="form-check form-switch text-light">
+                <input class="form-check-input" type="checkbox" id="lineWrap">
+                <label class="form-check-label" for="lineWrap">自动换行</label>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row mt-3">
+        <!-- 侧边栏 -->
+        <!--<div class="col-md-3">
+            <div class="card">
+                <div class="card-header">日志文件列表</div>
+                <div class="card-body p-0">
+                    <div id="fileTree" class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">${filePath}</a>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+
+        <!-- 主编辑器区域 -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <p>${filePath}</p>
+                    <!--<input type="text" id="searchInput" class="form-control" placeholder="搜索日志...">-->
+                </div>
+                <div class="card-body p-0">
+                    <textarea id="logEditor"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 脚本依赖 -->
+<script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
+<script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/static/codemirror/5.65.13/codemirror.min.js}"></script>
+<!--<script th:src="@{/static/codemirror/5.65.13/mode/log/log.js}"></script>-->
+<!--<script th:src="@{/static/codemirror/5.65.13/theme/dracula.min.css}"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.js"></script>
+
+<script th:inline="javascript">
+    const filePath = '${message}';
+    console.log(filePath);
+    // 自定义日志高亮模式
+    CodeMirror.defineMode("logHighlight", function() {
+        return {
+            token: function(stream) {
+                // 时间戳
+                if (stream.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/)) {
+                    return "timestamp";
+                }
+                // 日志级别
+                if (stream.match(/^(INFO|DEBUG|ERROR|WARN|TRACE)/)) {
+                    return "log-" + stream.current().toLowerCase();
+                }
+                // 错误堆栈
+                if (stream.match(/^\s+at .+/)) {
+                    return "stacktrace";
+                }
+                // 数字
+                if (stream.match(/^[0-9]+/)) {
+                    return "number";
+                }
+                stream.next();
+                return null;
+            }
+        };
+    });
+
+    // 初始化CodeMirror
+    const editor = CodeMirror.fromTextArea(document.getElementById('logEditor'), {
+        mode: "logHighlight",
+        theme: "idea",
+        lineNumbers: true,
+        readOnly: true,
+        lineWrapping: true,
+        scrollbarStyle: "native"
+    });
+
+    // 示例日志内容
+    const sampleLog = `
+    Caused by: org.thymeleaf.exceptions.TemplateOutputException: An error happened during template rendering
+    at org.thymeleaf.engine.OutputTemplateHandler.handleText(OutputTemplateHandler.java:75) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.thymeleaf.engine.ProcessorTemplateHandler.handleText(ProcessorTemplateHandler.java:587) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.thymeleaf.engine.TemplateHandlerAdapterMarkupHandler.handleText(TemplateHandlerAdapterMarkupHandler.java:218) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.thymeleaf.templateparser.markup.InlinedOutputExpressionMarkupHandler$InlineMarkupAdapterPreProcessorHandler.handleText(InlinedOutputExpressionMarkupHandler.java:232) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.thymeleaf.standard.inline.OutputExpressionInlinePreProcessorHandler.handleText(OutputExpressionInlinePreProcessorHandler.java:136) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.thymeleaf.templateparser.markup.InlinedOutputExpressionMarkupHandler.handleText(InlinedOutputExpressionMarkupHandler.java:80) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
+    at org.attoparser.HtmlMarkupHandler.handleText(HtmlMarkupHandler.java:208) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
+    at org.attoparser.AbstractChainedMarkupHandler.handleText(AbstractChainedMarkupHandler.java:203) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
+    at org.attoparser.MarkupParser.parseBuffer(MarkupParser.java:557) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
+    at org.attoparser.MarkupParser.parseDocument(MarkupParser.java:301) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
+    ... 63 common frames omitted
+`;
+
+    editor.setValue(sampleLog);
+
+    // 事件绑定
+    $(function() {
+        // 文件列表点击
+        $('#fileTree a').click(function(e) {
+            e.preventDefault();
+            $('#fileTree a').removeClass('active');
+            $(this).addClass('active');
+            editor.setValue(sampleLog); // 模拟加载文件内容
+        });
+
+        // 自动换行切换
+        $('#lineWrap').change(function() {
+            editor.setOption('lineWrapping', this.checked);
+        });
+
+        // 搜索功能
+        $('#searchInput').on('input', function() {
+            const query = $(this).val();
+            if (query) {
+                editor.operation(function() {
+                    for (let cursor = editor.getSearchCursor(query); cursor.findNext();) {
+                        editor.markText(cursor.from(), cursor.to(), {
+                            className: "highlight"
+                        });
+                    }
+                });
+            }
+        });
+
+        // 自动滚动
+        let autoScroll = true;
+        editor.on('change', () => {
+            if (autoScroll) {
+                editor.execCommand('goDocEnd');
+            }
+        });
+        $('#autoScroll').change(function() {
+            autoScroll = this.checked;
+        });
+    });
+</script>
+</body>
+</html>

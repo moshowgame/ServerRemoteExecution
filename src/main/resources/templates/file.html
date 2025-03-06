@@ -184,8 +184,8 @@
 
                 <!-- 状态栏 -->
                 <div class="status-bar">
-                    <span>N 个项目</span>
-                    <span>可用空间: X GB</span>
+                    <span></span>
+                    <span><a href="https://github.com/moshowgame/ServerRemoteExecution">SRE(Server Remote Execution)</a>&nbsp;&nbsp;<a href="https://zhengkai.blog.csdn.net/">Powered by Moshow</a></span>
                 </div>
             </div>
         </div>
@@ -389,41 +389,40 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ filePath: filePath }),
                 success: function(response) {
-                    $('#fileContent').html('<pre>' + response + '</pre>').show();
+                    console.log(response);
+                    $('#fileContent').html('<div class="alert alert-success" role="alert"><pre>' + response.data + '</pre></div>').show();
                 },
                 error: function(error) {
                     console.log(error);
-                    $('#fileContent').html('<pre>'+error.responseJSON.msg+'</pre>').show();
+                    $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
                 }
             });
         }
         // 下载文件内容
         function downloadFile(filePath) {
-            // 创建一个隐藏的<a>标签
-            var a = document.createElement('a');
-            a.style.display = 'none';
-            document.body.appendChild(a);
-
-            // 创建一个隐藏的表单
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = downloadUrl;
-            form.style.display = 'none';
-            document.body.appendChild(form);
-
-            // 创建一个隐藏的输入字段，用于传递filePath
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'filePath';
-            input.value = filePath;
-            form.appendChild(input);
-
-            // 提交表单
-            form.submit();
-
-            // 移除表单和<a>标签
-            document.body.removeChild(form);
-            document.body.removeChild(a);
+            $.ajax({
+                url: downloadUrl,
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ filePath: filePath }),
+                success: function(response) {
+                    // 创建一个隐藏的<a>标签，用于触发下载
+                    const blob = new Blob([response], { type: 'application/octet-stream' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filePath.split('\\').pop(); // 使用文件名作为下载文件的默认名称
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    $('#fileContent').html('<div class="alert alert-success" role="alert"><i class="bi bi-cloud-arrow-down-fill"></i><pre>下载成功!!!</pre></div>').show();
+                },
+                error: function(error) {
+                    console.log(error);
+                    $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
+                }
+            });
         }
     </script>
 </body>

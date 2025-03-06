@@ -37,6 +37,10 @@ public class FileController {
     public ModelAndView listFile() {
         return new ModelAndView("file");
     }
+    @GetMapping("/vscode")
+    public ModelAndView vscode(String filePath) {
+        return new ModelAndView("vscode").addObject("filePath",filePath);
+    }
 
     @PostMapping("/list")
     public ResponseEntity<List<FileInfo>> listFile(@RequestBody FileRequest fileRequest) throws IOException {
@@ -53,7 +57,9 @@ public class FileController {
         fileRequest.setExecutionType("download");
         fileRequest.setExecutionTime(new Date());
 
-        Path path = Paths.get(fileRequest.getFilePath()).normalize();
+        String filePath = fileRequest.getFilePath().replaceAll("//","");
+        log.info("FileDownloadRequest:{} {}",filePath, fileRequest);
+        Path path = Paths.get(filePath).normalize();
 
         // 安全校验
 //        if (!path.startsWith("C:\\allowed_directory")) {
@@ -102,8 +108,6 @@ public class FileController {
             log.error("Error checking file type for path: {}", path, e);
             return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error checking file type for path");
         }
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE,"text/plain")
-                .body(Files.readString(path));
+        return ResponseUtil.success(Files.readString(path));
     }
 }
