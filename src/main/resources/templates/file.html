@@ -188,6 +188,7 @@
                 <!-- 状态栏 -->
                 <div class="status-bar">
                     <span></span>
+                    <span><i class="bi bi-folder2-open"></i>EnterFolder</span> <i class="bi bi-journal-text">LogViewer</i> <i class="bi bi-code-square">View Content</i> <i class="bi bi-file-earmark-arrow-down">Download</i><i class="bi bi-eye">TextViewer</i>
                     <span><a href="https://github.com/moshowgame/ServerRemoteExecution">SRE(Server Remote Execution)</a>&nbsp;&nbsp;<a href="https://zhengkai.blog.csdn.net/">Powered by Moshow</a></span>
                 </div>
             </div>
@@ -200,7 +201,7 @@
     <script th:inline="javascript">
         const listUrl = /*[[ @{/list} ]]*/ '';
         const logViewerUrl = /*[[ @{/logViewer} ]]*/ '';
-        const vscodeUrl = /*[[ @{/vscode} ]]*/ '';
+        const vscodeUrl = /*[[ @{/textViewer} ]]*/ '';
         const readUrl = /*[[ @{/read} ]]*/ '';
         const downloadUrl = /*[[ @{/download} ]]*/ '';
         // 图标映射

@@ -45,12 +45,11 @@ public class FileController {
     public ModelAndView listFile() {
         return new ModelAndView("file");
     }
-    @GetMapping("/vscode")
-    public ModelAndView vscode(String filePath) {
+    @GetMapping("/textViewer")
+    public ModelAndView textViewer(String filePath) {
         // 确保路径合法化
         Path normalizedPath = Paths.get(filePath).normalize();
-        log.info("VSCode view requested for path: {}", normalizedPath);
-        return new ModelAndView("vscode").addObject("filePath", normalizedPath.toString());
+        return new ModelAndView("textViewer").addObject("filePath", normalizedPath.toString());
     }
 
     @GetMapping("/logViewer")

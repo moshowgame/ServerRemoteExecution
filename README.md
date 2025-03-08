@@ -7,12 +7,15 @@ ServerRemoteExecution，基于SpringBoot3的服务器远程维护工具，支持
 *.Powered by **Moshow郑锴**@https://zhengkai.blog.csdn.net/
 
 # 功能
-- ### 文件操作
-    - List
-    - Read
-    - Download
-- ### 命令执行(Powershell)
-    - Execute
+- ### Folder 文件夹操作
+    - List浏览
+    - LogViewer专业日志模式查看当前目录(支持文件名匹配和文件内容搜索)
+- ### File 文件操作
+    - TextViewer文本编辑器查看模式(只读)
+    - ViewContent直接查看文件内容(适合小文件)
+    - Download直接下载文件
+- ### Command 命令执行(Powershell)
+    - Execute执行命令(带审计日志)
 
 
 
@@ -28,14 +31,14 @@ ServerRemoteExecution，基于SpringBoot3的服务器远程维护工具，支持
 TEST SHELL
 ----
 - `Get-Item .`
-- `Get-Item .`
+- `Get-Process java`
 
 版本更新
 ----
 | 版本         | 更新内容                         |
 |------------|------------------------------|
 | 2025-03-09 | 新增LogViewer并支持日志文件名匹配和日志内容查找 |
-| 2025-03-08 | 优化文本浏览器功能                    |
+| 2025-03-08 | 优化TextViewer功能               |
 | 2025-03-06 | 优化文件下载和简单文本内容浏览功能            |
 | 2025-03-04 | 实现文件目录查看以及文本浏览(完善中)          |
 | 2025-03-03 | 新增登录页面和Landing Page，静态文件本地化  |
@@ -47,6 +50,7 @@ TEST SHELL
 ![Landing](img4.png)
 ![SHELL](img1.png)
 ![File](img2.png)
+![logViewer](img_logViewer.png)
 ![API](img3.png)
 
 
