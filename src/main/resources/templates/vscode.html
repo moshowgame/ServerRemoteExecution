@@ -47,23 +47,22 @@
 <div class="container-fluid">
     <div class="row mt-3">
         <!-- 侧边栏 -->
-        <!--<div class="col-md-3">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-header">日志文件列表</div>
                 <div class="card-body p-0">
                     <div id="fileTree" class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action">${filePath}</a>
+                        <!-- 文件列表将动态加载到这里 -->
                     </div>
                 </div>
             </div>
-        </div>-->
+        </div>
 
         <!-- 主编辑器区域 -->
-        <div class="col-md-12">
+        <div class="col-md-9">
             <div class="card">
                 <div class="card-header">
-                    <p>${filePath}</p>
-                    <!--<input type="text" id="searchInput" class="form-control" placeholder="搜索日志...">-->
+                    <p id="fileName"></p>
                 </div>
                 <div class="card-body p-0">
                     <textarea id="logEditor"></textarea>
@@ -77,76 +76,101 @@
 <script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
 <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/static/codemirror/5.65.13/codemirror.min.js}"></script>
-<!--<script th:src="@{/static/codemirror/5.65.13/mode/log/log.js}"></script>-->
-<!--<script th:src="@{/static/codemirror/5.65.13/theme/dracula.min.css}"></script>-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.js"></script>
 
 <script th:inline="javascript">
-    const filePath = '${message}';
-    console.log(filePath);
-    // 自定义日志高亮模式
-    CodeMirror.defineMode("logHighlight", function() {
-        return {
-            token: function(stream) {
-                // 时间戳
-                if (stream.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/)) {
-                    return "timestamp";
-                }
-                // 日志级别
-                if (stream.match(/^(INFO|DEBUG|ERROR|WARN|TRACE)/)) {
-                    return "log-" + stream.current().toLowerCase();
-                }
-                // 错误堆栈
-                if (stream.match(/^\s+at .+/)) {
-                    return "stacktrace";
-                }
-                // 数字
-                if (stream.match(/^[0-9]+/)) {
-                    return "number";
-                }
-                stream.next();
-                return null;
-            }
-        };
-    });
 
-    // 初始化CodeMirror
-    const editor = CodeMirror.fromTextArea(document.getElementById('logEditor'), {
-        mode: "logHighlight",
-        theme: "idea",
-        lineNumbers: true,
-        readOnly: true,
-        lineWrapping: true,
-        scrollbarStyle: "native"
-    });
-
-    // 示例日志内容
-    const sampleLog = `
-    Caused by: org.thymeleaf.exceptions.TemplateOutputException: An error happened during template rendering
-    at org.thymeleaf.engine.OutputTemplateHandler.handleText(OutputTemplateHandler.java:75) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.thymeleaf.engine.ProcessorTemplateHandler.handleText(ProcessorTemplateHandler.java:587) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.thymeleaf.engine.TemplateHandlerAdapterMarkupHandler.handleText(TemplateHandlerAdapterMarkupHandler.java:218) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.thymeleaf.templateparser.markup.InlinedOutputExpressionMarkupHandler$InlineMarkupAdapterPreProcessorHandler.handleText(InlinedOutputExpressionMarkupHandler.java:232) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.thymeleaf.standard.inline.OutputExpressionInlinePreProcessorHandler.handleText(OutputExpressionInlinePreProcessorHandler.java:136) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.thymeleaf.templateparser.markup.InlinedOutputExpressionMarkupHandler.handleText(InlinedOutputExpressionMarkupHandler.java:80) ~[thymeleaf-3.1.2.RELEASE.jar:3.1.2.RELEASE]
-    at org.attoparser.HtmlMarkupHandler.handleText(HtmlMarkupHandler.java:208) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
-    at org.attoparser.AbstractChainedMarkupHandler.handleText(AbstractChainedMarkupHandler.java:203) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
-    at org.attoparser.MarkupParser.parseBuffer(MarkupParser.java:557) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
-    at org.attoparser.MarkupParser.parseDocument(MarkupParser.java:301) ~[attoparser-2.0.7.RELEASE.jar:2.0.7.RELEASE]
-    ... 63 common frames omitted
-`;
-
-    editor.setValue(sampleLog);
-
-    // 事件绑定
+    // 加载文件列表
     $(function() {
-        // 文件列表点击
-        $('#fileTree a').click(function(e) {
-            e.preventDefault();
-            $('#fileTree a').removeClass('active');
-            $(this).addClass('active');
-            editor.setValue(sampleLog); // 模拟加载文件内容
+        const listUrl = /*[[ @{/list} ]]*/ '';
+        const readUrl = /*[[ @{/read} ]]*/ '';
+        const downloadUrl = /*[[ @{/download} ]]*/ '';
+        const filePath = /*[[${filePath}]]*/ '';
+        const parentPath = filePath.substring(0, filePath.lastIndexOf('\\'));
+        const fileNameStr = filePath.substring(filePath.lastIndexOf('\\')+1,filePath.length);
+        console.log(parentPath);
+
+        $('#fileName').text(filePath);
+        let editor = CodeMirror.fromTextArea(document.getElementById('logEditor'), {
+                mode: "logHighlight",
+                theme: "idea",
+                lineNumbers: true,
+                readOnly: true,
+                lineWrapping: true,
+                scrollbarStyle: "native"
+            });
+        // 自定义日志高亮模式
+        CodeMirror.defineMode("logHighlight", function() {
+            return {
+                token: function(stream) {
+                    // 时间戳
+                    if (stream.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/)) {
+                        return "timestamp";
+                    }
+                    // 日志级别
+                    if (stream.match(/^(INFO|DEBUG|ERROR|WARN|TRACE)/)) {
+                        return "log-" + stream.current().toLowerCase();
+                    }
+                    // 错误堆栈
+                    if (stream.match(/^\s+at .+/)) {
+                        return "stacktrace";
+                    }
+                    // 数字
+                    if (stream.match(/^[0-9]+/)) {
+                        return "number";
+                    }
+                    stream.next();
+                    return null;
+                }
+            };
+        });
+        // 调用 /list 接口获取文件列表
+        $.ajax({
+            url: listUrl,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ filePath: parentPath }),
+            success: function(data) {
+                const fileTree = $('#fileTree');
+                data.forEach(file => {
+                    if (!file.isDirectory){
+                        console.log(file)
+                        const fileItem = $('<a href="#" class="list-group-item list-group-item-action"></a>').text(file.name);
+                        //if filename = filepath , add active class
+                        if (file.name.trim() === fileNameStr.trim()) {
+                            console.log("check active:",file.name,fileNameStr);
+                            fileItem.addClass('active');
+
+
+                        }
+                        fileItem.click(function(e) {
+                            e.preventDefault();
+                            $('#fileTree a').removeClass('active');
+                            $(this).addClass('active');
+                            // 调用 /read 接口读取文件内容
+                            $.ajax({
+                                url: readUrl,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ filePath: file.path }),
+                                success: function(logContent) {
+                                    // editor.getDoc().setValue(logContent);
+                                    $('#logEditor').html(logContent.data);
+                                    editor.refresh();
+                                },
+                                error: function(error) {
+                                    console.error('Error reading file:', error);
+                                }
+                            });
+                        });
+                        fileTree.append(fileItem);
+                    }
+                });
+            },
+            error: function(error) {
+                console.error('Error loading file list:', error);
+            }
         });
 
         // 自动换行切换

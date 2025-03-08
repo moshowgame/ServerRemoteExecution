@@ -196,6 +196,7 @@
 
     <script th:inline="javascript">
         const listUrl = /*[[ @{/list} ]]*/ '';
+        const vscodeUrl = /*[[ @{/vscode} ]]*/ '';
         const readUrl = /*[[ @{/read} ]]*/ '';
         const downloadUrl = /*[[ @{/download} ]]*/ '';
         // 图标映射
@@ -271,6 +272,13 @@
                 const path = $(this).data('path');
                 downloadFile(path);
             });
+
+            // 查看文件
+            $('#fileList').on('click', '.view-btn', function(e) {
+                e.stopPropagation();
+                const path = $(this).data('path');
+                window.location.href = vscodeUrl+'?filePath=' + encodeURIComponent(path);
+            });
         });
 
         // 加载路径
@@ -318,7 +326,8 @@
                 const actionButton = file.directory
                     ? `<button class="btn btn-sm btn-primary enter-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-folder2-open"></i></button>`
                     : `<button class="btn btn-sm btn-success read-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-code-square"></i></button>
-                       <button class="btn btn-sm btn-info download-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-file-earmark-arrow-down"></i></button>`;
+                       <button class="btn btn-sm btn-info download-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                       <button class="btn btn-sm btn-warning view-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-eye"></i></button>`;
                 $list.append(`
                     <div class="file-item">
                         <div><i class="fas ${icon} text-primary"></i></div>

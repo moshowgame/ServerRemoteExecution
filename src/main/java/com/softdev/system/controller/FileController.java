@@ -39,7 +39,10 @@ public class FileController {
     }
     @GetMapping("/vscode")
     public ModelAndView vscode(String filePath) {
-        return new ModelAndView("vscode").addObject("filePath",filePath);
+        // 确保路径合法化
+        Path normalizedPath = Paths.get(filePath).normalize();
+        log.info("VSCode view requested for path: {}", normalizedPath);
+        return new ModelAndView("vscode").addObject("filePath", normalizedPath.toString());
     }
 
     @PostMapping("/list")
@@ -47,9 +50,13 @@ public class FileController {
         fileRequest.setExecutionType("list");
         fileRequest.setExecutionTime(new Date());
 
+        // 确保路径合法化
+        Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
+        log.info("Listing files for path: {}", normalizedPath);
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE,"application/json")
-                .body(fileSystemService.listFiles(fileRequest.getFilePath()));
+                .body(fileSystemService.listFiles(normalizedPath.toString()));
     }
 
     @PostMapping("/download")
@@ -91,7 +98,12 @@ public class FileController {
         }
         try {
             String contentType = Files.probeContentType(path);
-            if(contentType == null && (fileRequest.getFilePath().toLowerCase().contains(".txt")||fileRequest.getFilePath().toLowerCase().contains(".log"))){
+            if(contentType == null && (
+                fileRequest.getFilePath().toLowerCase().contains(".txt") ||
+                fileRequest.getFilePath().toLowerCase().contains(".log") ||
+                fileRequest.getFilePath().toLowerCase().contains(".json") ||
+                fileRequest.getFilePath().toLowerCase().contains(".xml")
+            )){
                 //special file type
                 log.info("File is a near text file: {} {}", path , null);
             }
@@ -104,10 +116,17 @@ public class FileController {
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);
             }
             log.info("File type: {} {}", path , contentType);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Error checking file type for path: {}", path, e);
             return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error checking file type for path");
         }
-        return ResponseUtil.success(Files.readString(path));
+        String fileContent = null;
+        try {
+            fileContent = Files.readString(path);
+        } catch (IOException e) {
+            log.error("Error", e.fillInStackTrace());
+            return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error reading file :"+e.getMessage());
+        }
+        return ResponseUtil.success(fileContent);
     }
 }
