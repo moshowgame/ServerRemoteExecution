@@ -6,6 +6,8 @@ import com.softdev.system.service.FileSystemService;
 import com.softdev.system.service.PowerShellService;
 import com.softdev.system.util.ResponseUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -17,12 +19,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -45,8 +53,19 @@ public class FileController {
         return new ModelAndView("vscode").addObject("filePath", normalizedPath.toString());
     }
 
+    @GetMapping("/logViewer")
+    public ModelAndView logViewer(String filePath, String fileNamePattern, String keyWord) {
+        // 确保路径合法化
+        Path normalizedPath = Paths.get(filePath).normalize();
+        log.info("LogViewer requested for path: {}, fileNamePattern: {}, keyWord: {}", normalizedPath, fileNamePattern, keyWord);
+        return new ModelAndView("logViewer")
+                .addObject("filePath", normalizedPath.toString())
+                .addObject("fileNamePattern", fileNamePattern)
+                .addObject("keyWord", keyWord);
+    }
+
     @PostMapping("/list")
-    public ResponseEntity<List<FileInfo>> listFile(@RequestBody FileRequest fileRequest) throws IOException {
+    public Object listFile(@RequestBody FileRequest fileRequest) throws IOException {
         fileRequest.setExecutionType("list");
         fileRequest.setExecutionTime(new Date());
 
@@ -54,9 +73,60 @@ public class FileController {
         Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
         log.info("Listing files for path: {}", normalizedPath);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE,"application/json")
-                .body(fileSystemService.listFiles(normalizedPath.toString()));
+        return ResponseUtil.success(fileSystemService.listFiles(normalizedPath.toString()));
+    }
+
+    @PostMapping("/listPlus")
+    public Object listFilePlus(@RequestBody FileRequest fileRequest) throws IOException {
+        fileRequest.setExecutionType("list");
+        fileRequest.setExecutionTime(new Date());
+
+        // 确保路径合法化
+        Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
+        log.info("Listing files for path: {} ", fileRequest);
+
+        // 获取所有文件
+        List<FileInfo> allFiles = fileSystemService.listFiles(normalizedPath.toString());
+
+        // 将通配符模式转换为正则表达式
+        String fileNamePattern = fileRequest.getFileNamePattern().toLowerCase(Locale.ROOT).trim();
+
+        // 过滤文件名称匹配fileNamePattern的文件
+        List<FileInfo> filteredFiles = allFiles.stream()
+                .filter(file -> file.getName().toLowerCase(Locale.ROOT).contains(fileNamePattern))
+                .toList();
+
+        // 进一步过滤包含keyWord关键字的文件
+        List<FileInfo> resultFiles = new ArrayList<>();
+        if(StringUtils.isNotBlank(fileRequest.getKeyWord())){
+            List<FileInfo> finalResultFiles = new ArrayList<>();
+            filteredFiles = filteredFiles.stream()
+                    .filter(file -> {
+                        Path filePath = Paths.get(fileRequest.getFilePath(), file.getName());
+                        try {
+                            String fileContent= FileUtils.readFileToString(new File(filePath.toString()), StandardCharsets.UTF_8).replaceAll("\\u0000","").replaceAll("\u0000","").replaceAll("�","");;
+                            log.info("fileContent {}", fileContent);
+                            if (fileContent.contains(fileRequest.getKeyWord().trim())) {
+                                log.info("File {} contains keyWord {}", filePath, fileRequest.getKeyWord());
+                                finalResultFiles.add(file);
+                            }
+//                            List<String> allLines=FileUtils.readLines(new File(filePath.toString()), "UTF-8");
+//                            allLines=allLines.stream().filter(line->line.toLowerCase().contains(fileRequest.getKeyWord().trim().toLowerCase())).toList();
+//                            if(!allLines.isEmpty()){
+//                                finalResultFiles.add(file);
+//                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return false;
+                    })
+                    .toList();
+            resultFiles = finalResultFiles;
+        }else {
+            resultFiles = filteredFiles;
+        }
+
+        return ResponseUtil.success(resultFiles);
     }
 
     @PostMapping("/download")
@@ -111,7 +181,7 @@ public class FileController {
                 log.error("File is a near text file: {} {}", path , null);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+null);
             }
-            else if (contentType != null && !contentType.startsWith("text")) {
+            else if (!contentType.startsWith("text")) {
                 log.error("File is not a text file: {} {}", path , contentType);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);
             }
@@ -122,7 +192,9 @@ public class FileController {
         }
         String fileContent = null;
         try {
-            fileContent = Files.readString(path);
+            fileContent = FileUtils.readFileToString(new File(path.toString()), "UTF-8");
+            // 新增特殊字符转换:修复各种乱码问题
+            fileContent = fileContent.replaceAll("\\u0000","").replaceAll("\u0000","").replaceAll("�","");
         } catch (IOException e) {
             log.error("Error", e.fillInStackTrace());
             return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error reading file :"+e.getMessage());

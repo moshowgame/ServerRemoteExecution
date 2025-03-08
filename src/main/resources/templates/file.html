@@ -165,6 +165,9 @@
                     </button>
                     <nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>
                     <input type="text" class="search-box" placeholder="搜索">
+                    <button class="btn btn-sm btn-danger ms-2" id="btnClear">
+                        <i class="fas fa-trash"></i> 清除输出
+                    </button>
                 </div>
 
                 <!-- 文件列表 -->
@@ -196,6 +199,7 @@
 
     <script th:inline="javascript">
         const listUrl = /*[[ @{/list} ]]*/ '';
+        const logViewerUrl = /*[[ @{/logViewer} ]]*/ '';
         const vscodeUrl = /*[[ @{/vscode} ]]*/ '';
         const readUrl = /*[[ @{/read} ]]*/ '';
         const downloadUrl = /*[[ @{/download} ]]*/ '';
@@ -277,8 +281,21 @@
             $('#fileList').on('click', '.view-btn', function(e) {
                 e.stopPropagation();
                 const path = $(this).data('path');
-                window.location.href = vscodeUrl+'?filePath=' + encodeURIComponent(path);
+                window.open(vscodeUrl+'?filePath=' + encodeURIComponent(path), '_blank');
             });
+
+            // 打开日志查看器
+            $('#fileList').on('click', '.log-viewer-btn', function(e) {
+                e.stopPropagation();
+                const path = $(this).data('path');
+                window.open(logViewerUrl+'?filePath=' + encodeURIComponent(path), '_blank');
+            });
+
+            // 清除日志内容
+            $('#btnClear').click(() => {
+                $('#fileContent').empty().hide();
+            });
+
         });
 
         // 加载路径
@@ -305,7 +322,7 @@
                 data: JSON.stringify({ filePath: path }),
                 success: function(response) {
                     // console.log(response);
-                    renderFiles(response);
+                    renderFiles(response.data);
                 },
                 error: function(xhr, status, error) {
                     $('#fileList').empty().append('<div class="text-danger">加载文件失败: Access Denied Exception or other IO Exception</div>');
@@ -324,7 +341,8 @@
                 const fileType = file.directory ? '文件夹' : '文件';
                 const icon = iconMap[fileType] || iconMap.default;
                 const actionButton = file.directory
-                    ? `<button class="btn btn-sm btn-primary enter-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-folder2-open"></i></button>`
+                    ? `<button class="btn btn-sm btn-primary enter-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-folder2-open"></i></button>
+                       <button class="btn btn-sm btn-secondary log-viewer-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-journal-text"></i></button>`
                     : `<button class="btn btn-sm btn-success read-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-code-square"></i></button>
                        <button class="btn btn-sm btn-info download-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-file-earmark-arrow-down"></i></button>
                        <button class="btn btn-sm btn-warning view-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-eye"></i></button>`;

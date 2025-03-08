@@ -10,4 +10,6 @@ public class FileRequest {
     String userName;
     String executionType;
     Date executionTime;
+    String fileNamePattern;
+    String keyWord;
 }

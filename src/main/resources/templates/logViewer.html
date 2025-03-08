@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LogViewer</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/font-awesome/6.4.0/css/all.min.css}" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/static/bootstrap/5.3.2/css/bootstrap-icons.min.css}">
+
+    <!-- Ace CSS -->
+   <!-- <link rel="stylesheet" th:href="@{/static/ace/1.4.12/ace.min.css}">-->
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">LogViewer</span>
+        <div class="d-flex">
+            <div class="form-check form-switch text-light me-3">
+                (c) Powered by Moshow ( <a href="https://zhengkai.blog.csdn.net/">CSDN</a> | <a href="https://github.com/moshowgame/">GITHUB</a> )
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row mt-3">
+        <!-- 侧边栏 -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <p id="fileName"></p>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush" id="fileListSidebar"></ul>
+                </div>
+            </div>
+        </div>
+        <!-- 主编辑器区域 -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+
+                    <input type="text" id="fileNamePattern" class="form-control ms-3" placeholder="文件名匹配模式" th:value="${fileNamePattern}">
+                    <input type="text" id="keyWord" class="form-control ms-3" placeholder="关键字" th:value="${keyWord}">
+                    <input type="button" id="searchBtn" class="btn btn-primary ms-3" value="搜索">
+                    <input type="text" id="searchInput" class="form-control ms-3" placeholder="搜索日志内容(高亮显示)">
+                </div>
+                <div class="card-body p-0">
+                    <div id="logEditor" style="height: calc(100vh - 150px); border-left: 1px solid #ddd;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 脚本依赖 -->
+<script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
+<script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
+
+<!-- Ace JS -->
+<script th:src="@{/static/ace/1.37.2/ace.min.js}"></script>
+<script th:src="@{/static/ace/1.37.2/ext-themelist.min.js}"></script>
+<script th:src="@{/static/ace/1.37.2/mode-logtalk.min.js}"></script>
+
+<script th:inline="javascript">
+    $(function() {
+        const readUrl = /*[[ @{/read} ]]*/ '';
+        const listPlusUrl = /*[[ @{/listPlus} ]]*/ '';
+        const filePath = /*[[${filePath}]]*/ '';
+        const fileNamePattern = /*[[${fileNamePattern}]]*/ '';
+        const keyWord = /*[[${keyWord}]]*/ '';
+
+        $('#fileName').html('<i class="bi bi-folder-fill"></i> '+filePath);
+
+        // 初始化Ace
+        window.editor = ace.edit('logEditor');
+        //https://github.com/ajaxorg/ace/tree/master/src/theme
+        // editor.setTheme('monokai');
+        //https://github.com/ajaxorg/ace/blob/master/src/mode/
+        editor.session.setMode('ace/mode/logtalk');
+        editor.setReadOnly(true);
+        editor.setShowPrintMargin(false);
+        editor.setOptions({
+            maxLines: Infinity,
+            wrap: true
+        });
+
+        // 搜索功能
+        $('#searchInput').on('input', function() {
+            const query = $(this).val();
+            if (query) {
+                editor.find(query, {
+                    backwards: false,
+                    wrap: true,
+                    caseSensitive: false,
+                    wholeWord: false,
+                    regExp: false
+                });
+            }
+        });
+
+        // 搜索按钮点击事件
+        $('#searchBtn').click(function() {
+            $.ajax({
+                url: listPlusUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ filePath: filePath, fileNamePattern: $('#fileNamePattern').val(), keyWord: $('#keyWord').val() }),
+                success: function(response) {
+                    renderFileListSidebar(response.data);
+                },
+                error: function(error) {
+                    console.error('Error searching files:', error);
+                }
+            });
+        });
+
+        // 渲染侧边栏文件列表
+        function renderFileListSidebar(files) {
+            const $fileListSidebar = $('#fileListSidebar').empty();
+            files.forEach(file => {
+                const $listItem = $('<li class="list-group-item list-group-item-action">' + file.name + '</li>');
+                $listItem.click(function() {
+                    $.ajax({
+                        url: readUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ filePath: filePath + "\\" + file.name }),
+                        success: function(response) {
+                            editor.setValue(response.data);
+                        },
+                        error: function(error) {
+                            console.error('Error reading file:', error);
+                        }
+                    });
+                });
+                $fileListSidebar.append($listItem);
+            });
+        }
+    });
+</script>
+</body>
+</html>

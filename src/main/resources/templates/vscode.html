@@ -133,7 +133,7 @@
             data: JSON.stringify({ filePath: parentPath }),
             success: function(data) {
                 const fileTree = $('#fileTree');
-                data.forEach(file => {
+                data.data.forEach(file => {
                     if (!file.isDirectory){
                         console.log(file)
                         const fileItem = $('<a href="#" class="list-group-item list-group-item-action"></a>').text(file.name);
