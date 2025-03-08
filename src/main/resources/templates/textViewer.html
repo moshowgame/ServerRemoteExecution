@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>日志查看器</title>
+    <title>TextViewer</title>
 
     <!-- Bootstrap 5 CSS -->
     <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet"/>
@@ -27,7 +27,7 @@
 <!-- 导航栏 -->
 <nav class="navbar navbar-dark bg-dark">
     <div class="container-fluid">
-        <span class="navbar-brand">日志查看器</span>
+        <span class="navbar-brand">TextViewer</span>
         <div class="d-flex">
             <div class="form-check form-switch text-light me-3">
                 (c) Powered by Moshow ( <a href="https://zhengkai.blog.csdn.net/">CSDN</a> | <a href="https://github.com/moshowgame/">GITHUB</a> )
@@ -93,6 +93,7 @@
             },
             error: function(error) {
                 console.error('Error reading file:', error);
+                editor.setValue("ERROR ************** "+error.responseJSON.msg);
             }
         });
 
