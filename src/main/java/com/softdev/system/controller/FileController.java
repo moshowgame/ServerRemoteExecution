@@ -189,19 +189,19 @@ public class FileController {
                 fileRequest.getFilePath().toLowerCase().contains(".xml")
             )){
                 //special file type
-                log.info("File is a near text file: {} {}", path , null);
+//                log.info("File is a near text file: {} {}", path , null);
             }
             else if (contentType == null){
-                log.error("File is a near text file: {} {}", path , null);
+//                log.error("File is a near text file: {} {}", path , null);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+null);
             }
             else if (!contentType.startsWith("text")) {
-                log.error("File is not a text file: {} {}", path , contentType);
+//                log.error("File is not a text file: {} {}", path , contentType);
                 return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"File is not a text file:"+contentType);
             }
-            log.info("File type: {} {}", path , contentType);
+//            log.info("File type: {} {}", path , contentType);
         } catch (Exception e) {
-            log.error("Error checking file type for path: {}", path, e);
+//            log.error("Error checking file type for path: {}", path, e);
             return ResponseUtil.fail(ResponseUtil.StatusCode.INTERNAL_ERROR,"Error checking file type for path");
         }
         String fileContent = null;
