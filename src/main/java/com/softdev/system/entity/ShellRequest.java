@@ -9,5 +9,6 @@ public class ShellRequest {
     String command;
     String userName;
     String executionType;
+    String ticketNumber;
     Date executionTime;
 }

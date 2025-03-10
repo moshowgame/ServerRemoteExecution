@@ -2,6 +2,8 @@ package com.softdev.system.controller;
 
 import com.softdev.system.entity.ShellRequest;
 import com.softdev.system.service.PowerShellService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,9 +28,13 @@ public class ShellController {
     }
 
     @PostMapping("execute")
-    public String execute(@RequestBody ShellRequest shellRequest) throws IOException, InterruptedException {
+    public String execute(@RequestBody ShellRequest shellRequest, HttpServletRequest request) throws IOException, InterruptedException {
         shellRequest.setExecutionTime(new Date());
-        log.info("Shell Execution：{}", shellRequest);
+        //从session里面获取用户名和单据号，注入实体中
+        HttpSession session = request.getSession(false);
+        shellRequest.setUserName(session.getAttribute("entitledUser")+"");
+        shellRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
+        log.info("Audit Log - Shell Execution ：{}", shellRequest);
         return powerShellService.executeCommand(shellRequest.getCommand());
     }
 }

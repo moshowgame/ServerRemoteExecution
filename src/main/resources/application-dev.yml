@@ -28,3 +28,5 @@ spring:
         max-request-size: 10MB
 aes:
     secret-key: SRE12306
+logging:
+  config: classpath:logback-dev.xml

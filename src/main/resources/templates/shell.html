@@ -146,8 +146,13 @@
         // 回车执行
         $input.on('keypress', function(e) {
             if (e.which === 13) {
+                const $submitBtn = $(this);
                 const cmd = $input.val().trim();
-                if (cmd) executeCommand(cmd);
+                if (cmd) {
+                    $spinner.show();
+                    $("#submitBtn").prop('disabled', true); // 禁用按钮
+                    executeCommand(cmd, $submitBtn);
+                }
             }
         });
         $("#lastBtn").click(function() {
@@ -174,7 +179,7 @@
             const cmd = $input.val().trim();
             if (cmd) {
                 $spinner.show();
-                $submitBtn.prop('disabled', true); // 禁用按钮
+                $("#submitBtn").prop('disabled', true); // 禁用按钮
                 executeCommand(cmd, $submitBtn);
             }
         });

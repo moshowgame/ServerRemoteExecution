@@ -45,6 +45,7 @@ public class EntitlementController {
             // 获取Session并存储用户信息
             HttpSession session = request.getSession();
             session.setAttribute("entitledUser", entity.getUserName());
+            session.setAttribute("ticketNumber", entity.getTicketNumber());
             // 设置Session过期时间（30天）
             session.setMaxInactiveInterval(30 * 24 * 60 * 60); // 单位：秒
 
