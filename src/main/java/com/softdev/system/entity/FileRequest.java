@@ -12,4 +12,5 @@ public class FileRequest {
     Date executionTime;
     String fileNamePattern;
     String keyWord;
+    String ticketNumber;
 }

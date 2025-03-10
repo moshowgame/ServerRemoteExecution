@@ -5,6 +5,8 @@ import com.softdev.system.entity.FileRequest;
 import com.softdev.system.service.FileSystemService;
 import com.softdev.system.service.PowerShellService;
 import com.softdev.system.util.ResponseUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,25 +66,35 @@ public class FileController {
     }
 
     @PostMapping("/list")
-    public Object listFile(@RequestBody FileRequest fileRequest) throws IOException {
+    public Object listFile(@RequestBody FileRequest fileRequest, HttpServletRequest request) throws IOException {
         fileRequest.setExecutionType("list");
         fileRequest.setExecutionTime(new Date());
 
+        //从session里面获取用户名和单据号，注入实体中
+        HttpSession session = request.getSession(false);
+        fileRequest.setUserName(session.getAttribute("entitledUser")+"");
+        fileRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
+
         // 确保路径合法化
         Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
-        log.info("Listing files for path: {}", normalizedPath);
+        log.info("Audit Log - Listing files for path: {}", fileRequest);
 
         return ResponseUtil.success(fileSystemService.listFiles(normalizedPath.toString()));
     }
 
     @PostMapping("/listPlus")
-    public Object listFilePlus(@RequestBody FileRequest fileRequest) throws IOException {
+    public Object listFilePlus(@RequestBody FileRequest fileRequest,HttpServletRequest request) throws IOException {
         fileRequest.setExecutionType("list");
         fileRequest.setExecutionTime(new Date());
 
+        //从session里面获取用户名和单据号，注入实体中
+        HttpSession session = request.getSession(false);
+        fileRequest.setUserName(session.getAttribute("entitledUser")+"");
+        fileRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
+
         // 确保路径合法化
         Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
-        log.info("Listing files for path: {} ", fileRequest);
+        log.info("Audit Log - Listing files for path: {} ", fileRequest);
 
         // 获取所有文件
         List<FileInfo> allFiles = fileSystemService.listFiles(normalizedPath.toString());
@@ -104,16 +116,11 @@ public class FileController {
                         Path filePath = Paths.get(fileRequest.getFilePath(), file.getName());
                         try {
                             String fileContent= FileUtils.readFileToString(new File(filePath.toString()), StandardCharsets.UTF_8).replaceAll("\\u0000","").replaceAll("\u0000","").replaceAll("�","");;
-                            log.info("fileContent {}", fileContent);
+//                            log.info("fileContent {}", fileContent);
                             if (fileContent.contains(fileRequest.getKeyWord().trim())) {
-                                log.info("File {} contains keyWord {}", filePath, fileRequest.getKeyWord());
+//                                log.info("File {} contains keyWord {}", filePath, fileRequest.getKeyWord());
                                 finalResultFiles.add(file);
                             }
-//                            List<String> allLines=FileUtils.readLines(new File(filePath.toString()), "UTF-8");
-//                            allLines=allLines.stream().filter(line->line.toLowerCase().contains(fileRequest.getKeyWord().trim().toLowerCase())).toList();
-//                            if(!allLines.isEmpty()){
-//                                finalResultFiles.add(file);
-//                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -129,12 +136,16 @@ public class FileController {
     }
 
     @PostMapping("/download")
-    public ResponseEntity<Resource> downloadFile(@RequestBody FileRequest fileRequest) {
+    public ResponseEntity<Resource> downloadFile(@RequestBody FileRequest fileRequest,HttpServletRequest request) {
         fileRequest.setExecutionType("download");
         fileRequest.setExecutionTime(new Date());
+        //从session里面获取用户名和单据号，注入实体中
+        HttpSession session = request.getSession(false);
+        fileRequest.setUserName(session.getAttribute("entitledUser")+"");
+        fileRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
 
         String filePath = fileRequest.getFilePath().replaceAll("//","");
-        log.info("FileDownloadRequest:{} {}",filePath, fileRequest);
+        log.info("Audit Log - FileDownloadRequest:{} {}",filePath, fileRequest);
         Path path = Paths.get(filePath).normalize();
 
         // 安全校验
@@ -150,12 +161,16 @@ public class FileController {
     }
 
     @PostMapping("/read")
-    public Object read(@RequestBody FileRequest fileRequest) throws IOException {
+    public Object read(@RequestBody FileRequest fileRequest,HttpServletRequest request) throws IOException {
         fileRequest.setExecutionType("read");
         fileRequest.setExecutionTime(new Date());
+        //从session里面获取用户名和单据号，注入实体中
+        HttpSession session = request.getSession(false);
+        fileRequest.setUserName(session.getAttribute("entitledUser")+"");
+        fileRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
 
         Path path = Paths.get(fileRequest.getFilePath()).normalize();
-        log.info("FileReadRequest:{}", fileRequest);
+        log.info("Audit Log - Read File Request:{} ",fileRequest);
         // 安全校验
 //        if (!path.startsWith("C:\\allowed_directory")) {
 //            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
