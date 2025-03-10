@@ -56,10 +56,6 @@
             <div id="ps-terminal" class="p-3">
                 <!-- 初始引导信息 -->
                 <div class="output-line">
-                    ****** Server Remote Execution - execute your powershell script remotely ******<br>
-                    (c) Powered by Moshow ( <a href="https://zhengkai.blog.csdn.net/">CSDN</a> | <a href="https://github.com/moshowgame/">GITHUB</a> ).<br><br>
-
-                    安装最新的 PowerShell，了解新功能和改进！https://aka.ms/PSWindows
                 </div>
             </div>
 
@@ -72,7 +68,12 @@
                        placeholder="输入命令后按回车">
                 <span class="input-group-text bg-transparent border-0">
                         <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                    <input type="button" id="lastBtn" class="btn btn-outline-info ms-3" value="Last">
+                    <input type="button" id="nextBtn" class="btn btn-outline-info ms-3" value="Next">
+                    <input type="button" id="submitBtn" class="btn btn-outline-info ms-3" value="Execute">
+                    <input type="button" id="cleanBtn" class="btn btn-outline-info ms-3" value="Clean">
                     </span>
+
             </div>
         </div>
     </div>
@@ -82,38 +83,37 @@
 <script th:src="@{/static/jquery/3.7.1/jquery.min.js}"></script>
 <script th:src="@{/static/bootstrap/5.3.2/js/bootstrap.bundle.min.js}"></script>
 
-<script>
+<script th:inline="javascript">
+    const executeUrl = /*[[ @{/execute} ]]*/ '';
+
     $(document).ready(function() {
         const $terminal = $('#ps-terminal');
         const $input = $('#cmd-input');
         const $spinner = $('.loading-spinner');
         let commandHistory = [];
         let historyIndex = -1;
+        function initialize() {
+            $terminal.empty();
+            $terminal.append(`
+                    ****** Server Remote Execution - execute your powershell script remotely ******<br>
+                    (c) Powered by Moshow ( <a href="https://zhengkai.blog.csdn.net/">CSDN</a> | <a href="https://github.com/moshowgame/">GITHUB</a> ).<br><br>
 
-        // 模拟命令响应
-        const commandResponses = {
-            'help': `支持的模拟命令：
-    - help       显示帮助信息
-    - get-date   显示当前时间
-    - get-process 显示进程列表
-    - clear      清空终端
-    - exit       关闭窗口`,
-            'get-date': new Date().toLocaleString(),
-            'get-process': `Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  ProcessName
-    -------  ------    -----      -----     ------     --  -----------
-    158      15        8340       17348             7844  Code
-    245      25        12304      23456             8912  Chrome`,
-            'clear': function() { $terminal.empty(); }
-        };
-        function executeCommand(cmd) {
+                    安装最新的 PowerShell，了解新功能和改进！https://aka.ms/PSWindows
+                    `
+            );
+            $input.focus();
+        }
+        initialize();
+        function executeCommand(cmd, $submitBtn) {
             $.ajax({
-                url: 'http://localhost:12306/sre/execute',
+                url: executeUrl,
                 type: 'POST',
-                data: JSON.stringify({ command: cmd , userName: "admin"}),
+                data: JSON.stringify({ command: cmd, userName: "admin" }),
                 contentType: 'application/json',
                 success: function(response) {
                     console.log(response);
                     $spinner.hide();
+                    $submitBtn.prop('disabled', false); // 启用按钮
                     $terminal.append(`
                             <div class="output-line text-success">
                                 PS > ${cmd}
@@ -121,46 +121,26 @@
                             <div class="output-line text-white">
                                 <pre>${response}</pre>
                             </div>`
-                    )
+                    );
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseText);
+                    $spinner.hide();
+                    $submitBtn.prop('disabled', false); // 启用按钮
+                    $terminal.append(`
+                            <div class="output-line text-danger">
+                                错误: ${xhr.responseText}
+                            </div>`
+                    );
                 }
             });
-        }
-        // 执行命令
-        function executeCommandMock(cmd) {
-            $spinner.show();
-            $terminal.append(`
-                    <div class="output-line text-success">
-                        PS C:\\> ${cmd}
-                    </div>
-                `);
-
-            // 模拟延迟
-            setTimeout(() => {
-                let response = '';
-                if (cmd === 'clear') {
-                    commandResponses[cmd]();
-                } else if (commandResponses[cmd]) {
-                    response = commandResponses[cmd];
-                } else {
-                    response = `'${cmd}' 不是可识别的 cmdlet、函数、脚本文件或可运行程序。`;
-                }
-
-                if (cmd !== 'clear') {
-                    $terminal.append(`
-                            <div class="output-line text-white">
-                                ${response}
-                            </div>
-                        `);
-                }
-
-                commandHistory.push(cmd);
-                historyIndex = commandHistory.length;
-                $input.val('');
-                $spinner.hide();
-                $terminal.scrollTop($terminal[0].scrollHeight);
-                // 使用localStorage
-                localStorage.setItem('cmdHistory', JSON.stringify(commandHistory));
-            }, 1000);
+            commandHistory.push(cmd);
+            historyIndex = commandHistory.length;
+            $input.val('');
+            $spinner.hide();
+            $terminal.scrollTop($terminal[0].scrollHeight);
+            // 使用localStorage
+            localStorage.setItem('cmdHistory', JSON.stringify(commandHistory));
         }
 
         // 回车执行
@@ -170,7 +150,34 @@
                 if (cmd) executeCommand(cmd);
             }
         });
-
+        $("#lastBtn").click(function() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                $input.val(commandHistory[historyIndex]);
+            }
+        });
+        $("#nextBtn").click(function() {
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++;
+                $input.val(commandHistory[historyIndex]);
+            } else {
+                historyIndex = commandHistory.length;
+                $input.val('');
+            }
+        });
+        $("#cleanBtn").click(function() {
+            $terminal.empty();
+            initialize();
+        });
+        $("#submitBtn").click(function() {
+            const $submitBtn = $(this);
+            const cmd = $input.val().trim();
+            if (cmd) {
+                $spinner.show();
+                $submitBtn.prop('disabled', true); // 禁用按钮
+                executeCommand(cmd, $submitBtn);
+            }
+        });
         // 上下箭头历史记录
         $input.on('keydown', function(e) {
             if (e.key === 'ArrowUp') {
