@@ -8,8 +8,8 @@ ServerRemoteExecution，基于SpringBoot3的服务器远程维护工具，支持
 
 # 功能
 - ### Folder 文件夹操作
-    - List浏览
-    - LogViewer专业日志模式查看当前目录(支持文件名匹配和文件内容搜索)
+    - FolderExplorer —— 目录浏览功能
+    - LogViewer —— 以专业日志模式打开目录(支持文件名匹配和文件内容搜索，以及关键字高亮)
 - ### File 文件操作
     - TextViewer文本编辑器查看模式(只读)
     - ViewContent直接查看文件内容(适合小文件)
@@ -37,6 +37,7 @@ TEST SHELL
 ----
 | 版本         | 更新内容                                                                                                                             |
 |------------|----------------------------------------------------------------------------------------------------------------------------------|
+| 2025-03-11 | LogViewer:优化日志浏览器样式，包括日志样式和高度问题。                                                                                                 |
 | 2025-03-11 | FileExplorer:文本浏览区域下移至网页底部，对于长文本浏览时效果更友好<br>LogViewer:由于Ace渲染性能问题，编辑器更换为CodeMirror5。                                             |
 | 2025-03-10 | ShellExecutor:<br>1.修复shell界面执行命令api路径问题<br>2.修复上下按钮或者键盘上下键调用上一次/下一次命令失效问题<br>3.执行按钮新增防抖功能。<br>4.新增logback审核日志配置功能，可定制日志输出样式和路径。 |
 | 2025-03-09 | 新增LogViewer并支持日志文件名匹配和日志内容查找                                                                                                     |
@@ -50,13 +51,14 @@ TEST SHELL
 ----
 ![Login](img0.png)
 ![Landing](img4.png)
-![SHELL](img1.png)
-![File](img2.png)
+![SHELL](img_shell.png)
+![folderExplorer](img_folderExplorer.png)
 ![logViewer](img_logViewer.png)
+![textViewer](img_textViewer.png)
 ![API](img3.png)
 
 
-List folder
+List folder API
 ----
 Visit `http://localhost:12306/sre/list` to list folder.
 

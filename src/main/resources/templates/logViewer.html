@@ -13,7 +13,7 @@
     <!-- CodeMirror 5 CSS -->
     <link th:href="@{/static/codemirror/5.65.18/lib/codemirror.css}" rel="stylesheet"/>
     <link th:href="@{/static/codemirror/5.65.18/addon/search/matchesonscrollbar.css}" rel="stylesheet"/>
-    <link th:href="@{/static/codemirror/5.65.18/theme/neo.css}" rel="stylesheet"/>
+    <link th:href="@{/static/codemirror/5.65.18/theme/idea.css}" rel="stylesheet"/>
 
     <!-- Prism.js CSS -->
     <!--<link th:href="@{/static/prism/prism.css}" rel="stylesheet"/>-->
@@ -52,11 +52,13 @@
                     <input type="text" id="fileNamePattern" class="form-control ms-3" placeholder="匹配文件名" th:value="${fileNamePattern}">
                     <input type="text" id="keyWord" class="form-control ms-3" placeholder="关键字" th:value="${keyWord}">
                     <input type="button" id="searchBtn" class="form-control ms-3 btn btn-outline-primary" value="搜索">
-                    <input type="text" id="searchInput" class="form-control ms-3" placeholder="搜索日志内容(高亮显示)">
                 </div>
-                <div class="card-body p-0">
-                    <!-- 替换 <pre> 为 <textarea> -->
-                    <textarea id="logEditor" style="height: calc(100vh - 150px); border-left: 1px solid #ddd;"></textarea>
+                <div class="card-body p-0 d-flex flex-column">
+                    <input type="text" id="searchInput" class="form-control ms-3" placeholder="搜索日志内容(高亮显示)">
+                    <div class="flex-grow-1">
+                        <!-- 替换 <pre> 为 <textarea> -->
+                        <textarea id="logEditor" style="height: 100%; border-left: 1px solid #ddd;"></textarea>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,7 +71,8 @@
 
 <!-- CodeMirror 5 JavaScript -->
 <script th:src="@{/static/codemirror/5.65.18/lib/codemirror.js}"></script>
-<script th:src="@{/static/codemirror/5.65.18/mode/javascript/javascript.js}"></script>
+<script th:src="@{/static/codemirror/5.65.18/addon/mode/loadmode.js}"></script>
+<script th:src="@{/static/codemirror/5.65.18/mode/verilog/verilog.js}"></script>
 <script th:src="@{/static/codemirror/5.65.18/addon/search/search.js}"></script>
 <script th:src="@{/static/codemirror/5.65.18/addon/search/searchcursor.js}"></script>
 <script th:src="@{/static/codemirror/5.65.18/addon/scroll/annotatescrollbar.js}"></script>
@@ -91,11 +94,17 @@
         // 初始化CodeMirror 5编辑器
         const editor = CodeMirror.fromTextArea(document.getElementById('logEditor'), {
             lineNumbers: true,
+            // 确保 mode 设置正确
             mode: 'verilog',
-            theme: 'ayu-mirage',
-            readOnly: true
+            // mode: 'text/x-log',
+            theme: 'idea',
+            readOnly: true,
+            // 添加自动高度配置
+            viewportMargin: Infinity,
+            autoRefresh: true
         });
-
+        // 添加窗口resize监听
+        window.addEventListener('resize', () => editor.refresh());
         // 搜索文本高亮功能
         $('#searchInput').on('input', function() {
             const query = $(this).val();
@@ -140,6 +149,7 @@
                         success: function(response) {
                             originalContent = response.data;
                             editor.setValue(originalContent); // 更新CodeMirror内容
+                            editor.refresh();
                         },
                         error: function(error) {
                             console.error('Error reading file:', error);
@@ -154,6 +164,11 @@
 <style>
     .highlight {
         background-color: yellow;
+    }
+    /* 添加CSS */
+    .CodeMirror {
+        flex: 1;
+        min-height: calc(90vh - 180px); /* 动态获取浏览器的高度然后减去200px */
     }
 </style>
 </body>
