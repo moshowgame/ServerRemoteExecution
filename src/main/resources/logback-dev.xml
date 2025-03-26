@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="false">
-    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
-    <property name="LOG_HOME" value="D:\Workspace\Project\ServerRemoteExecution\logs"/>
-    <property name="APP_ENV" value="dev"/>
-    <property name="LOG_NAME" value="SRE-AUDIT"/>
+<configuration>
     <!-- 控制台输出 -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
             <!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %boldMagenta(%-5level %logger{50}) : %msg%n</pattern>-->
@@ -14,28 +10,25 @@
             </pattern>
         </encoder>
     </appender>
-    <!-- 按照每天生成日志文件 -->
+
+    <!-- 按日期滚动的文件输出 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/${LOG_NAME}-${APP_ENV}.log</file>
+        <file>D:\Workspace\Project\ServerRemoteExecution\logs\application.log</file> <!-- 当前日志文件 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!--日志文件输出的文件名-->
-            <FileNamePattern>${LOG_HOME}/${LOG_NAME}-${APP_ENV}_%d{yyyy-MM-dd}.log</FileNamePattern>
-            <!--日志文件保留天数-->
-            <MaxHistory>90</MaxHistory>
+            <!-- 按天滚动，文件名格式：logs/application-2023-10-20.log -->
+            <fileNamePattern>D:\Workspace\Project\ServerRemoteExecution\logs\application-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- 保留 7 天日志 -->
+            <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
         </encoder>
-        <!--日志文件最大的大小-->
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>50MB</MaxFileSize>
-        </triggeringPolicy>
     </appender>
 
-    <!-- 日志输出级别 -->
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+    <!-- 根日志级别及输出目标 -->
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

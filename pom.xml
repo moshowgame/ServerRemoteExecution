@@ -14,27 +14,47 @@
 		<!-- 指定jdk版本 -->
 		<java.version>17</java.version>
 		<springboot.version>3.3.4</springboot.version>
-<!--		<springboot.version>2.7.8</springboot.version>-->
+		<!--		<springboot.version>2.7.8</springboot.version>-->
 		<lombok.version>1.18.24</lombok.version>
-<!--		<druid.version>1.2.23</druid.version>-->
-<!--		<postgresql.version>42.3.10</postgresql.version>-->
+		<!--		<druid.version>1.2.23</druid.version>-->
+		<!--		<postgresql.version>42.3.10</postgresql.version>-->
 		<hutool.version>5.8.28</hutool.version>
 		<commonslang3.version>3.17.0</commonslang3.version>
 		<junit.version>4.13.1</junit.version>
-<!--		<mybatisplus.version>3.5.8</mybatisplus.version>-->
+		<!--		<mybatisplus.version>3.5.8</mybatisplus.version>-->
 		<jakarta.version>6.1.0</jakarta.version>
 		<fastjson.version>2.0.53</fastjson.version>
-<!--		<p6sy.version>1.10.0</p6sy.version>-->
-<!--		<springdoc.version>2.6.0</springdoc.version>-->
+		<!--		<p6sy.version>1.10.0</p6sy.version>-->
+		<!--		<springdoc.version>2.6.0</springdoc.version>-->
 	</properties>
 
 	<repositories>
 		<repository>
-			<id>alimaven</id>
-			<name>aliyun maven</name>
-			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+			<id>aliyunmaven</id>
+			<name>阿里云公共仓库</name>
+			<url>https://maven.aliyun.com/repository/public</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>aliyunmaven</id>
+			<name>阿里云插件仓库</name>
+			<url>https://maven.aliyun.com/repository/public</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 	<!-- spring-boot-starter-parent包含了大量配置好的依赖管理，在自己项目添加这些依赖的时候不需要写<version>版本号 -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -56,7 +76,11 @@
 			<version>${jakarta.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
+		<!-- 添加Log4j2依赖 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
 		<!-- 实现web功能 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -69,6 +93,10 @@
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
