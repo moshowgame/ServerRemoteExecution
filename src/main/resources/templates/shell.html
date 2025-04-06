@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Web PowerShell Executor</title>
+    <title>PowerShell online</title>
     <!-- Bootstrap 5 CSS -->
     <link th:href="@{/static/bootstrap/5.3.2/css/bootstrap.min.css}" rel="stylesheet">
     <!-- Font Awesome -->
@@ -52,28 +52,52 @@
         <div class="card-header bg-primary text-white">
             <i class="fas fa-terminal me-2"></i>PowerShell Executor
         </div>
-        <div class="card-body p-0">
-            <div id="ps-terminal" class="p-3">
-                <!-- 初始引导信息 -->
-                <div class="output-line">
-                </div>
+        <div class="card-body p-0 d-flex">
+            <!-- 侧边栏 -->
+            <div class="sidebar bg-dark p-3" style="width: 200px;">
+                <h6 class="text-white">常用命令</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white quick-command" data-command='[Console]::OutputEncoding'>获取默认PS编码</a></li>
+                    <li><a target="_blank" href="https://learn.microsoft.com/zh-tw/windows-server/administration/windows-commands/powershell">查询PS命令</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command='Get-Process | Where-Object { $_.ProcessName -like "*java*" }'>获取java进程</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command="Get-Service| check service status">获取Qlik服务</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command='Copy-Item -Path "C:\temp\file.txt" -Destination "D:\backup\"'>复制文件</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command="Get-ChildItem -Path C:\">查询目录</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command='Get-EventLog -LogName System | Where-Object { $_.EventID -eq 6006 -or $_.EventID -eq 6005 } | Select-Object TimeGenerated, EventID, Message'>服务器重启事件</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command='Get-WinEvent -LogName Security | Where-Object { $_.Id -eq 4624 -and $_.TimeCreated -gt (Get-Date).AddDays(-15) -and $_.Message -match "Source Network Address" } | ForEach-Object { if ($_.Message -match "Source Network Address:\s+([\d\.]+)") { $matches[1] } } | Sort-Object -Unique'>服务器登录事件</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command="Get-NetIPAddress">获取IP地址</a></li>
+                    <li><a href="#" class="text-white quick-command" data-command='robocopy "C:\SourceFolder" "D:\DestinationFolder" "fileName" /XO /A-:D /S /MT:8'>RoboCopy</a></li>
+                </ul>
             </div>
 
-            <!-- 输入区域 -->
-            <div class="input-group p-2 border-top border-primary">
-                <span class="input-group-text ps-prompt bg-transparent border-0">PS </span>
-                <input type="text" id="cmd-input"
-                       class="form-control cmd-input border-0"
-                       autocomplete="off"
-                       placeholder="输入命令后按回车">
-                <span class="input-group-text bg-transparent border-0">
-                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
-                    <input type="button" id="lastBtn" class="btn btn-outline-info ms-3" value="Last">
-                    <input type="button" id="nextBtn" class="btn btn-outline-info ms-3" value="Next">
-                    <input type="button" id="submitBtn" class="btn btn-outline-info ms-3" value="Execute">
-                    <input type="button" id="cleanBtn" class="btn btn-outline-info ms-3" value="Clean">
-                    </span>
+            <!-- 主内容区 -->
+            <div class="flex-grow-1">
+                <div id="ps-terminal" class="p-3">
+                    <!-- 初始引导信息 -->
+                    <div class="output-line">
+                    </div>
+                </div>
 
+                <!-- 输入区域 -->
+                <div class="input-group p-2 border-top border-primary">
+                    <span class="input-group-text ps-prompt bg-transparent border-0">PS </span>
+                    <input type="text" id="cmd-input"
+                           class="form-control cmd-input border-0"
+                           autocomplete="off"
+                           placeholder="输入命令后按回车">
+                    <span class="input-group-text bg-transparent border-0">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        <input type="button" id="lastBtn" class="btn btn-outline-info ms-3" value="Last">
+                        <input type="button" id="nextBtn" class="btn btn-outline-info ms-3" value="Next">
+                        <input type="button" id="submitBtn" class="btn btn-outline-info ms-3" value="Execute">
+                        <input type="button" id="cleanBtn" class="btn btn-outline-info ms-3" value="Clean">
+                        <!-- 新增编码选择下拉框 -->
+                        <select id="encodingSelect" class="form-select ms-3" style="width: auto;">
+                            <option value="UTF-8" selected>UTF-8</option>
+                            <option value="GB2312">GB2312</option>
+                        </select>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -105,10 +129,11 @@
         }
         initialize();
         function executeCommand(cmd, $submitBtn) {
+            // 获取用户选择的编码
             $.ajax({
                 url: executeUrl,
                 type: 'POST',
-                data: JSON.stringify({ command: cmd, userName: "admin" }),
+                data: JSON.stringify({ command: cmd,  encoding: $('#encodingSelect').val() }),
                 contentType: 'application/json',
                 success: function(response) {
                     console.log(response);
@@ -120,8 +145,7 @@
                             </div>
                             <div class="output-line text-white">
                                 <pre>${response}</pre>
-                            </div>`
-                    );
+                            </div>`);
                 },
                 error: function(xhr, status, error) {
                     console.log(xhr.responseText);
@@ -130,8 +154,7 @@
                     $terminal.append(`
                             <div class="output-line text-danger">
                                 错误: ${xhr.responseText}
-                            </div>`
-                    );
+                            </div>`);
                 }
             });
             commandHistory.push(cmd);
@@ -201,6 +224,14 @@
                 }
                 e.preventDefault();
             }
+        });
+
+        // 快速命令点击事件
+        $('.quick-command').click(function(e) {
+            e.preventDefault();
+            const cmd = $(this).data('command');
+            $input.val(cmd);
+            $input.focus();
         });
 
         // 初始化焦点

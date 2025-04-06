@@ -36,6 +36,9 @@ public class ShellController {
         shellRequest.setUserName(session.getAttribute("entitledUser")+"");
         shellRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
         log.info("Audit Log - Shell Execution ：{}", shellRequest);
-        return powerShellService.executeCommand(shellRequest.getCommand());
+        if(shellRequest.getEncoding()==null){
+            shellRequest.setEncoding("UTF-8");
+        }
+        return powerShellService.executeCommand(shellRequest.getCommand(),shellRequest.getEncoding());
     }
 }
