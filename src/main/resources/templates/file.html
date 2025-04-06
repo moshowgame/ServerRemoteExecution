@@ -89,7 +89,7 @@
         }
 
         .search-box {
-            width: 300px;
+            width: 30px;
             border-radius: 20px;
             border: 1px solid var(--win-border);
             padding: 4px 16px;
@@ -113,6 +113,16 @@
             flex-grow: 1;
             overflow-y: auto;
         }
+
+        /* 新增地址栏样式 */
+        .path-input {  
+            width: 200px;  
+            margin-left: 12px;  
+            padding: 4px 16px;  
+            border: 1px solid var(--win-border);  
+            border-radius: 20px;  
+            background: rgba(255, 255, 255, 0.8);  
+        }  
     </style>
 </head>
 <body>
@@ -151,23 +161,26 @@
             <!-- 主内容区 -->
             <div class="flex-grow-1 d-flex flex-column">
                 <!-- 工具栏 -->
-                <div class="toolbar d-flex align-items-center">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-light" id="btnBack">
-                            <i class="fas fa-arrow-left"></i>
+                <div class="toolbar d-flex flex-column">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-light" id="btnBack">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light" id="btnForward">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-light" id="btnUp">
+                            <i class="fas fa-arrow-up"></i>
                         </button>
-                        <button class="btn btn-sm btn-light" id="btnForward">
-                            <i class="fas fa-arrow-right"></i>
+                        <button class="btn btn-sm btn-light" id="btnClear">
+                            <i class="bi bi-journal-x"></i>
                         </button>
+                        <input type="text" class="path-input mb-0 flex-grow-1 mx-lg-2" placeholder="输入路径">
+                        <input type="text" class="search-box mb-0 flex-grow-1 mx-lg-1" placeholder="搜索">
+                        <!--<nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>-->
                     </div>
-                    <button class="btn btn-sm btn-light" id="btnUp">
-                        <i class="fas fa-arrow-up"></i>
-                    </button>
-                    <nav class="breadcrumb mb-0 flex-grow-1 mx-2"></nav>
-                    <input type="text" class="search-box" placeholder="搜索">
-                    <button class="btn btn-sm btn-danger ms-2" id="btnClear">
-                        <i class="fas fa-trash"></i> 清除输出
-                    </button>
                 </div>
 
                 <!-- 文件列表 -->
@@ -207,6 +220,7 @@
         const vscodeUrl = /*[[ @{/textViewer} ]]*/ '';
         const readUrl = /*[[ @{/read} ]]*/ '';
         const downloadUrl = /*[[ @{/download} ]]*/ '';
+        const normalizedPath = /*[[ @{/normalizedPath} ]]*/ '';
         // 图标映射
         const iconMap = {
             true: 'fa-folder',
@@ -221,6 +235,8 @@
         let currentPath = 'C:\\';
         let history = [];
         let currentHistoryIndex = -1;
+        // 新增文件系统对象以保存路径对应的文件列表
+        const fileSystem = {};
 
         // 初始化
         $(document).ready(() => {
@@ -300,6 +316,15 @@
                 $('#fileContent').empty().hide();
             });
 
+            // 新增地址栏回车事件  
+            $('.path-input').on('keydown', function(e) {  
+                if (e.key === 'Enter') {  
+                    const path = $(this).val().trim();  
+                    if (path) {  
+                        loadPath(path);  
+                    }  
+                }  
+            });  
         });
 
         // 加载路径
@@ -311,10 +336,29 @@
             }
 
             currentPath = path;
-            updateBreadcrumb();
-            fetchFiles(path);
-            updateNavigationButtons();
-            $('#fileContent').hide();
+
+            // 请求后端接口重新格式化路径
+            $.ajax({
+                url: /*[[ @{/normalizedPath} ]]*/ '',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ filePath: path }),
+                success: function(response) {
+                    const normalizedPath = response.data;
+                    currentPath = normalizedPath;
+                    fetchFiles(normalizedPath);
+                    updateNavigationButtons();
+                    $('#fileContent').hide();
+                    $('.path-input').val(normalizedPath);
+                },
+                error: function(xhr, status, error) {
+                    console.error('路径格式化失败:', error);
+                    fetchFiles(path);
+                    updateNavigationButtons();
+                    $('#fileContent').hide();
+                    $('.path-input').val(path);
+                }
+            });
         }
 
         // 获取文件列表
@@ -325,7 +369,8 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({ filePath: path }),
                 success: function(response) {
-                    // console.log(response);
+                    // 保存文件列表到 fileSystem 对象
+                    fileSystem[path] = response.data;
                     renderFiles(response.data);
                 },
                 error: function(xhr, status, error) {
@@ -350,111 +395,112 @@
                     : `<button class="btn btn-sm btn-success read-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-code-square"></i></button>
                        <button class="btn btn-sm btn-info download-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-file-earmark-arrow-down"></i></button>
                        <button class="btn btn-sm btn-warning view-btn" data-path="${currentPath}\\${file.name}"><i class="bi bi-eye"></i></button>`;
-                $list.append(`
-                    <div class="file-item">
-                        <div><i class="fas ${icon} text-primary"></i></div>
-                        <div>${file.name}</div>
-                        <div>${file.lastModified}</div>
-                        <div>${file.size}</div>
-                        <div>${actionButton}</div>
-                    </div>
-                `);
-            });
+            $list.append(`
+                <div class="file-item">
+                    <div><i class="fas ${icon} text-primary"></i></div>
+                    <div>${file.name}</div>
+                    <div>${file.lastModified}</div>
+                    <div>${file.size}</div>
+                    <div>${actionButton}</div>
+                </div>
+            `);
+        });
 
-            // 更新状态栏
-            $('.status-bar span:first').text(`${files.length} 个项目`);
+        // 更新状态栏
+        $('.status-bar span:first').text(`${files.length} 个项目`);
+    }
+
+    // 搜索过滤
+    function filterFiles(keyword) {
+        // 从 fileSystem 对象中获取文件列表
+        const files = fileSystem[currentPath] || [];
+        const filtered = files.filter(file =>
+            file.name.toLowerCase().includes(keyword)
+        );
+        renderFiles(filtered);
+    }
+
+    // 导航历史控制
+    function navigateHistory(direction) {
+        const newIndex = currentHistoryIndex + direction;
+        if (newIndex >= 0 && newIndex < history.length) {
+            currentHistoryIndex = newIndex;
+            loadPath(history[currentHistoryIndex], true);
         }
+    }
 
-        // 搜索过滤
-        function filterFiles(keyword) {
-            const files = fileSystem[currentPath] || [];
-            const filtered = files.filter(file =>
-                file.name.toLowerCase().includes(keyword)
+    // 获取上级路径
+    function getParentPath(path) {
+        const parts = path.split('\\').filter(p => p);
+        if (parts.length <= 1) return null;
+        return parts.slice(0, -1).join('\\') + '\\';
+    }
+
+    // 更新面包屑导航
+    function updateBreadcrumb() {
+        const parts = currentPath.split('\\').filter(p => p);
+        const $breadcrumb = $('.breadcrumb').empty();
+
+        parts.forEach((part, index) => {
+            const isLast = index === parts.length - 1;
+            const path = parts.slice(0, index + 1).join('\\') + '\\';
+            $breadcrumb.append(
+                $(`<a class="breadcrumb-item ${isLast ? 'active' : ''}">${part}</a>`)
+                    .click(!isLast ? () => loadPath(path) : null)
             );
-            renderFiles(filtered);
-        }
+        });
+    }
 
-        // 导航历史控制
-        function navigateHistory(direction) {
-            const newIndex = currentHistoryIndex + direction;
-            if (newIndex >= 0 && newIndex < history.length) {
-                currentHistoryIndex = newIndex;
-                loadPath(history[currentHistoryIndex], true);
+    // 更新导航按钮状态
+    function updateNavigationButtons() {
+        $('#btnBack').prop('disabled', currentHistoryIndex <= 0);
+        $('#btnForward').prop('disabled', currentHistoryIndex >= history.length - 1);
+        $('#btnUp').prop('disabled', !getParentPath(currentPath));
+    }
+
+    // 读取文件内容
+    function readFile(filePath) {
+        $.ajax({
+            url: readUrl,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ filePath: filePath }),
+            success: function(response) {
+                console.log(response);
+                $('#fileContent').html('<div class="alert alert-success" role="alert"><pre>' + response.data + '</pre></div>').show();
+            },
+            error: function(error) {
+                console.log(error);
+                $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
             }
-        }
-
-        // 获取上级路径
-        function getParentPath(path) {
-            const parts = path.split('\\').filter(p => p);
-            if (parts.length <= 1) return null;
-            return parts.slice(0, -1).join('\\') + '\\';
-        }
-
-        // 更新面包屑导航
-        function updateBreadcrumb() {
-            const parts = currentPath.split('\\').filter(p => p);
-            const $breadcrumb = $('.breadcrumb').empty();
-
-            parts.forEach((part, index) => {
-                const isLast = index === parts.length - 1;
-                const path = parts.slice(0, index + 1).join('\\') + '\\';
-                $breadcrumb.append(
-                    $(`<a class="breadcrumb-item ${isLast ? 'active' : ''}">${part}</a>`)
-                        .click(!isLast ? () => loadPath(path) : null)
-                );
-            });
-        }
-
-        // 更新导航按钮状态
-        function updateNavigationButtons() {
-            $('#btnBack').prop('disabled', currentHistoryIndex <= 0);
-            $('#btnForward').prop('disabled', currentHistoryIndex >= history.length - 1);
-            $('#btnUp').prop('disabled', !getParentPath(currentPath));
-        }
-
-        // 读取文件内容
-        function readFile(filePath) {
-            $.ajax({
-                url: readUrl,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ filePath: filePath }),
-                success: function(response) {
-                    console.log(response);
-                    $('#fileContent').html('<div class="alert alert-success" role="alert"><pre>' + response.data + '</pre></div>').show();
-                },
-                error: function(error) {
-                    console.log(error);
-                    $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
-                }
-            });
-        }
-        // 下载文件内容
-        function downloadFile(filePath) {
-            $.ajax({
-                url: downloadUrl,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({ filePath: filePath }),
-                success: function(response) {
-                    // 创建一个隐藏的<a>标签，用于触发下载
-                    const blob = new Blob([response], { type: 'application/octet-stream' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filePath.split('\\').pop(); // 使用文件名作为下载文件的默认名称
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    $('#fileContent').html('<div class="alert alert-success" role="alert"><i class="bi bi-cloud-arrow-down-fill"></i><pre>下载成功!!!</pre></div>').show();
-                },
-                error: function(error) {
-                    console.log(error);
-                    $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
-                }
-            });
-        }
-    </script>
+        });
+    }
+    // 下载文件内容
+    function downloadFile(filePath) {
+        $.ajax({
+            url: downloadUrl,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({ filePath: filePath }),
+            success: function(response) {
+                // 创建一个隐藏的<a>标签，用于触发下载
+                const blob = new Blob([response], { type: 'application/octet-stream' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filePath.split('\\').pop(); // 使用文件名作为下载文件的默认名称
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                $('#fileContent').html('<div class="alert alert-success" role="alert"><i class="bi bi-cloud-arrow-down-fill"></i><pre>下载成功!!!</pre></div>').show();
+            },
+            error: function(error) {
+                console.log(error);
+                $('#fileContent').html('<div class="alert alert-danger" role="alert"><i class="bi bi-bug-fill"></i><pre>'+error.responseJSON.code+' - '+error.responseJSON.msg+'</pre></div>').show();
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -12,6 +12,7 @@ public class Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class,args);
 		log.info("Powered by https://zhengkai.blog.csdn.net/ ");
+		log.info("View in local http://localhost:12306/sre/ ");
 	}
 
 }

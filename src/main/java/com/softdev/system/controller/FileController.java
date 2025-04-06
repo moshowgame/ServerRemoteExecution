@@ -28,10 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,6 +49,13 @@ public class FileController {
         // 确保路径合法化
         Path normalizedPath = Paths.get(filePath).normalize();
         return new ModelAndView("textViewer").addObject("filePath", normalizedPath.toString());
+    }
+
+    @PostMapping("/normalizedPath")
+    public Object normalizedPath(@RequestBody Map<String, String> requestMap) {
+        // 确保路径合法化
+        Path normalizedPath = Paths.get(requestMap.get("filePath")).normalize();
+        return ResponseUtil.success(normalizedPath.toString());
     }
 
     @GetMapping("/logViewer")

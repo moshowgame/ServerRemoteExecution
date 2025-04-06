@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
+    <!-- Powered by Moshow@zhengkai.blog.csdn.net -->
     <Properties>
         <Property name="LOG_PATTERN_FILE">
             %d{yyyy-MM-dd HH:mm:ss.SSS}{GMT+0} [%t] %-5level %logger{36} - %msg%n
