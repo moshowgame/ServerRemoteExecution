@@ -196,7 +196,7 @@ public class FileController {
         fileRequest.setTicketNumber(session.getAttribute("ticketNumber")+"");
 
         Path path = Paths.get(fileRequest.getFilePath()).normalize();
-        log.info("Audit Log - Read File Request:{} ",fileRequest);
+//        log.info("Audit Log - Read File Request:{} ",fileRequest);
         // 安全校验
 //        if (!path.startsWith("C:\\allowed_directory")) {
 //            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
