@@ -49,8 +49,9 @@
         <div class="col-md-9">
             <div class="card">
                 <div class="card-header">
-                    <input type="text" id="fileNamePattern" class="form-control ms-3" placeholder="匹配文件名" th:value="${fileNamePattern}">
-                    <input type="text" id="keyWord" class="form-control ms-3" placeholder="关键字" th:value="${keyWord}">
+                    <label>文件名</label><input type="text" id="fileNamePattern" class="form-control ms-3" placeholder="匹配文件名" th:value="${fileNamePattern}">
+                    <label>包含文本</label><input type="text" id="keyWord" class="form-control ms-3" placeholder="关键字" th:value="${keyWord}">
+                    <label>查询范围(天数)</label><input type="number" id="days" class="form-control ms-3" placeholder="天数" min="1" max="999" value="1">
                     <input type="button" id="searchBtn" class="form-control ms-3 btn btn-outline-primary" value="搜索">
                 </div>
                 <div class="card-body p-0 d-flex flex-column">
@@ -125,7 +126,12 @@
                 url: listPlusUrl,
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ filePath: filePath, fileNamePattern: $('#fileNamePattern').val(), keyWord: $('#keyWord').val() }),
+                data: JSON.stringify({ 
+                    filePath: filePath, 
+                    fileNamePattern: $('#fileNamePattern').val(), 
+                    keyWord: $('#keyWord').val(),
+                    days: $('#days').val() // 新增天数参数
+                }),
                 success: function(response) {
                     renderFileListSidebar(response.data);
                 },

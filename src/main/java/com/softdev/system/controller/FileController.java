@@ -28,6 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -99,17 +102,36 @@ public class FileController {
         // 确保路径合法化
         Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
         log.info("Audit Log - Listing files for path: {} ", fileRequest);
-
+        // 获取当前时间
+        Instant now = Instant.now();
+        Duration duration = Duration.ofDays(Long.parseLong(fileRequest.getDays()));
         // 获取所有文件
         List<FileInfo> allFiles = fileSystemService.listFiles(normalizedPath.toString());
-
-        // 将通配符模式转换为正则表达式
-        String fileNamePattern = fileRequest.getFileNamePattern().toLowerCase(Locale.ROOT).trim();
-
-        // 过滤文件名称匹配fileNamePattern的文件
+        // 过滤时间不在查询范围
         List<FileInfo> filteredFiles = allFiles.stream()
-                .filter(file -> file.getName().toLowerCase(Locale.ROOT).contains(fileNamePattern))
+                .filter(file -> {
+                    Path filePath = Paths.get(fileRequest.getFilePath(), file.getName());
+                    try {
+                        BasicFileAttributes attr = Files.readAttributes(filePath, BasicFileAttributes.class);
+                        Instant fileLastModifiedTime = attr.lastModifiedTime().toInstant();
+                        return fileLastModifiedTime.isAfter(now.minus(duration));
+                    } catch (IOException e) {
+                        log.error("Error reading file attributes for path: {}", filePath, e);
+                        return false;
+                    }
+                })
                 .toList();
+
+        if(StringUtils.isNotBlank(fileRequest.getFileNamePattern())){
+            // 将通配符模式转换为正则表达式
+            String fileNamePattern = fileRequest.getFileNamePattern().toLowerCase(Locale.ROOT).trim();
+
+            // 过滤文件名称匹配fileNamePattern的文件
+            filteredFiles = filteredFiles.stream()
+                    .filter(file -> file.getName().toLowerCase(Locale.ROOT).contains(fileNamePattern))
+                    .toList();
+        }
+
 
         // 进一步过滤包含keyWord关键字的文件
         List<FileInfo> resultFiles = new ArrayList<>();
