@@ -81,7 +81,7 @@ public class FileController {
 
         // 确保路径合法化
         Path normalizedPath = Paths.get(fileRequest.getFilePath()).normalize();
-        log.info("Audit Log - Listing files for path: {}", fileRequest);
+//        log.info("Audit Log - Listing files for path: {}", fileRequest);
 
         return ResponseUtil.success(fileSystemService.listFiles(normalizedPath.toString()));
     }
